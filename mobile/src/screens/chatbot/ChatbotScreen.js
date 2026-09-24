@@ -11,8 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 // ─────────────────────────────────────────────
 // 🔑 GROQ API KEY  (move to backend env in production)
 // ─────────────────────────────────────────────
-const GROQ_API_KEY = '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';
-const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_API_KEY =""
+const GROQ_URL     =""
 
 // ── Clean, structured system prompt (prompt engineering) ──
 const SYSTEM_PROMPT = `You are "MediFirst," an AI first-aid and medical information assistant. Your sole purpose is to provide safe, accurate, and easy-to-understand first-aid guidance based on established protocols from authorities like the American Heart Association, Red Cross, and Mayo Clinic.
