@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   contentContainer: { paddingBottom: 16 },
 
   appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
-  hdrInner:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 12, paddingBottom: 5 },
+  hdrInner:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 20, paddingBottom: 1 },
   hdrBrand:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap:   { position: 'relative' },
   hdrLogoImg:    { width: 50, height: 50, borderRadius: 12 },
