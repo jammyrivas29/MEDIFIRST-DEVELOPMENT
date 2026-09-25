@@ -6,10 +6,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+// YOUR GROQ API KEY
+const GROQ_API_KEY = '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';
+const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
+
 const SYSTEM_PROMPT = `You are MediFirst AI, a helpful first aid assistant built into the MediFirst emergency app.
 
 Your role:
-- Answer ONLY first aid, medical emergency, and health safety questions
+- Answer ONLY first aid, medical emergency, greeting, and health safety questions
 - Give clear, step-by-step instructions when needed
 - Always remind users to call emergency services (911 or local emergency number) for life-threatening situations
 - Keep answers concise, calm, and easy to follow under stress
@@ -32,6 +36,31 @@ const QUICK_QUESTIONS = [
   'How to respond to poisoning?',
   'What to do for heat stroke?',
 ];
+
+async function askGroq(userQuestion) {
+  const response = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model:       'llama-3.3-70b-versatile',
+      messages:    [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: userQuestion },
+      ],
+      temperature: 0.4,
+      max_tokens:  512,
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err?.error?.message || `Groq API error: ${response.status}`);
+  }
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content ?? 'Sorry, I could not generate a response.';
+}
 
 // ── Animated message bubble — slides + fades in ──
 function MessageBubble({ item }) {
@@ -112,7 +141,7 @@ export default function ChatbotScreen() {
 
   const [messages, setMessages] = useState([{
     id:    '1',
-    text:  "👋 Hi! I'm MediFirst AI Assistant.\n\nI'm powered by Groq AI and can answer any first aid or medical emergency question instantly.\n\n⚠️ For real emergencies, always call 911 first!",
+    text:  "👋 Hi! I'm MediFirst AI Assistant.\n\nI can answer any first aid or medical emergency question instantly.\n\n⚠️ For real emergencies, always call 911 first!",
     isBot: true,
     time:  now(),
   }]);

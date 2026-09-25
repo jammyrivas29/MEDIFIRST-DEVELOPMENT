@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ✅ YOUR IP ADDRESS
-const API_BASE_URL = 'http://192.168.1.35:5000/api';
+const API_BASE_URL = 'https://medifirst-development.onrender.com/api';
 
 // Custom API client using fetch (no axios needed!)
 const api = {
