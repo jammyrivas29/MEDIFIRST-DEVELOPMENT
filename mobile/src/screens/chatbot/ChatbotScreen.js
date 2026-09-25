@@ -6,10 +6,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-// YOUR GROQ API KEY
-const GROQ_API_KEY = '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';
-const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
-
 const SYSTEM_PROMPT = `You are MediFirst AI, a helpful first aid assistant built into the MediFirst emergency app.
 
 Your role:
