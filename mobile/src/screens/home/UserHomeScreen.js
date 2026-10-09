@@ -15,7 +15,7 @@ const CATEGORIES = [
   { id: 'burns',       title: 'Burns',      icon: 'flame',       color: '#f39c12', description: 'Burn Treatment & Care' },
   { id: 'bleeding',    title: 'Bleeding',   icon: 'bandage',     color: '#c0392b', description: 'Stop Severe Bleeding' },
   { id: 'fractures',   title: 'Fractures',  icon: 'body',        color: '#8e44ad', description: 'Broken Bone Care' },
-  { id: 'seizure',     title: 'Seizures',   icon: 'pulse',       color: '#2980b9', description: 'Seizure Response' },
+  { id: 'seizure',     title: 'Seizure',   icon: 'pulse',       color: '#2980b9', description: 'Seizure Response' },
   { id: 'stroke',      title: 'Stroke',     icon: 'medkit',      color: '#d35400', description: 'Stroke Emergency Care' },
   { id: 'heat_stroke', title: 'Heat Stroke',icon: 'thermometer', color: '#f39c12', description: 'Heat-Related Emergency' },
 ];
@@ -24,7 +24,7 @@ const QUICK_TOOLS = [
   { title: 'Nearby Hospitals',  sub: 'Find emergency care near you', icon: 'location', color: '#27ae60', bg: '#e9f7ef', action: 'hospital' },
   { title: 'Emergency Contacts', sub: 'Your saved emergency contacts', icon: 'people',   color: '#2980b9', bg: '#e8f4fb', action: 'emergency' },
   { title: 'Medical Profile',    sub: 'Blood type, allergies & more',  icon: 'person',   color: '#8e44ad', bg: '#f5eef8', action: 'profile' },
-  { title: 'All Topics',         sub: 'Step-by-step emergency guides', icon: 'list',     color: '#c0392b', bg: '#fdecea', action: 'guides' },
+  { title: 'Video Instructions', sub: 'Watch how-to first aid videos', icon: 'play-circle', color: '#16a085', bg: '#eefaf8', action: 'videos' },
 ];
 
 const FIRST_AID_FACTS = [
@@ -116,6 +116,7 @@ export default function UserHomeScreen({ navigation }) {
       case 'emergency': navigation.navigate('Emergency'); break;
       case 'profile':   navigation.navigate('Profile'); break;
       case 'guides':    navigation.navigate('Guides', { screen: 'GuidesList' }); break;
+      case 'videos':    navigation.navigate('Videos'); break;
     }
   };
 
@@ -252,20 +253,20 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#f5f6f8' },
   contentContainer: { paddingBottom: 16 },
 
-  appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
+  appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: 35, paddingBottom: 0 },
   hdrInner:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 20, paddingBottom: 1 },
   hdrBrand:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap:   { position: 'relative' },
   hdrLogoImg:    { width: 50, height: 50, borderRadius: 12 },
-  hdrPulseDot:   { position: 'absolute', bottom: -1, right: -1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e74c3c' },
-  hdrTitle:      { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 18 },
-  hdrSub:        { fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
+  hdrPulseDot:   { position: 'absolute', bottom: -1, right: 3, width: 12, height: 12, borderRadius: 6, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e74c3c' },
+  hdrTitle:      { fontSize: 17, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 20 },
+  hdrSub:        { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
   hdrActions:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hdrIconBtn:    { width: 40, height: 40, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   hdrStrip:      { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 8 },
-  hdrStripText:  { fontSize: 11, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
+  hdrStripText:  { fontSize: 13, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
 
-  sectionHeader: { paddingHorizontal: 16, marginTop: 4, marginBottom: 12 },
+  sectionHeader: { paddingHorizontal: 16, marginTop: 10, marginBottom: 12 },
   sectionLabel:  { fontSize: 11, fontWeight: '700', color: '#c0392b', letterSpacing: 1.5, marginBottom: 6 },
   sectionTitle:  { fontSize: 20, fontWeight: '800', color: '#1a1a2e' },
 

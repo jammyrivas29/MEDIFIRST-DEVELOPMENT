@@ -14,19 +14,20 @@ const FIRST_LAUNCH_KEY      = 'medifirst_first_launch_done';
 const TOTAL_GUIDES          = 9;
 
 const LOCKED_FEATURES = [
-  { icon: 'people', color: '#2980b9', bg: '#e8f4fb', label: 'Emergency Contacts', sub: 'Your saved emergency contacts' },
-  { icon: 'person', color: '#8e44ad', bg: '#f5eef8', label: 'Medical Profile',    sub: 'Blood type, allergies & more' },
-  { icon: 'send',   color: '#e67e22', bg: '#fef5ec', label: 'Send Location SMS',  sub: 'GPS location to contacts' },
-  { icon: 'time',   color: '#c0392b', bg: '#fdecea', label: 'Call History',       sub: 'Your emergency call log' },
+  { icon: 'chatbubbles', color: '#16a085', bg: '#e8f8f5', label: 'MediFirst AI',       sub: 'Smart AI first-aid assistant' },
+  { icon: 'people',      color: '#2980b9', bg: '#e8f4fb', label: 'Emergency Contacts', sub: 'Your saved emergency contacts' },
+  { icon: 'person',      color: '#8e44ad', bg: '#f5eef8', label: 'Medical Profile',    sub: 'Blood type, allergies & more' },
+  { icon: 'send',        color: '#e67e22', bg: '#fef5ec', label: 'Send Location SMS',  sub: 'GPS location to contacts' },
+  { icon: 'time',        color: '#c0392b', bg: '#fdecea', label: 'Call History',       sub: 'Your emergency call log' },
 ];
 
 const MEMBER_PERKS = [
-  { icon: 'people',        color: '#2980b9', bg: '#e8f4fb', label: 'Emergency\nContacts' },
-  { icon: 'person',        color: '#8e44ad', bg: '#f5eef8', label: 'Medical\nProfile' },
-  { icon: 'send',          color: '#e67e22', bg: '#fef5ec', label: 'Location\nSMS' },
-  { icon: 'time',          color: '#c0392b', bg: '#fdecea', label: 'Call\nHistory' },
-  { icon: 'heart',         color: '#e74c3c', bg: '#fdecea', label: 'Health\nTips' },
-  { icon: 'notifications', color: '#16a085', bg: '#e8f8f5', label: 'Emergency\nAlerts' },
+  { icon: 'people',   color: '#2980b9', bg: '#e8f4fb', label: 'Emergency\nContacts' },
+  { icon: 'person',   color: '#8e44ad', bg: '#f5eef8', label: 'Medical\nProfile' },
+  { icon: 'send',     color: '#e67e22', bg: '#fef5ec', label: 'Location\nSMS' },
+  { icon: 'time',     color: '#c0392b', bg: '#fdecea', label: 'Call\nHistory' },
+  { icon: 'heart',    color: '#e74c3c', bg: '#fdecea', label: 'Health\nTips' },
+  { icon: 'chatbubbles', color: '#16a085', bg: '#e8f8f5', label: 'MediFirst\nAI' },
 ];
 
 const GUIDE_PREVIEWS = [
@@ -273,8 +274,8 @@ export default function GuestHomeScreen({ navigation }) {
 
         {/* Emergency */}
         <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 16, marginTop: 20, marginBottom: 4 }}>
-          <Text style={styles.sectionLabel}>EMERGENCY</Text>
-          <Text style={styles.sectionTitle}>Quick Response</Text>
+          <Text style={styles.sectionLabel}>Emergency</Text>
+          <Text style={styles.sectionTitle}>Quick Access</Text>
         </Animated.View>
         <Animated.View style={[styles.unifiedCard, { opacity: fadeAnim }]}>
           <View style={styles.cardHeaderStrip}>
@@ -285,6 +286,12 @@ export default function GuestHomeScreen({ navigation }) {
             <View style={[styles.rowIcon, { backgroundColor: '#e74c3c' }]}><Ionicons name="call" size={20} color="#fff" /></View>
             <View style={styles.rowText}><Text style={styles.rowTitle}>Call 911</Text><Text style={styles.rowSub}>Ambulance · Fire · Police</Text></View>
             <View style={[styles.rowBadge, { backgroundColor: '#fdecea' }]}><Text style={styles.rowBadgeText}>CALL</Text></View>
+          </TouchableOpacity>
+          <View style={styles.cardDivider} />
+          <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Hospital')} activeOpacity={0.82}>
+            <View style={[styles.rowIcon, { backgroundColor: '#27ae60' }]}><Ionicons name="location" size={20} color="#fff" /></View>
+            <View style={styles.rowText}><Text style={styles.rowTitle}>Nearby Hospitals</Text><Text style={styles.rowSub}>Find emergency care near you</Text></View>
+            <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}><Text style={[styles.rowBadgeText, { color: '#27ae60' }]}>FREE</Text></View>
           </TouchableOpacity>
           <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Guides')} activeOpacity={0.82}>
@@ -319,25 +326,6 @@ export default function GuestHomeScreen({ navigation }) {
                 ? <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}><Text style={[styles.rowBadgeText, { color: '#27ae60' }]}>SAVED</Text></View>
                 : <View style={[styles.rowBadge, { backgroundColor: '#f5eef8' }]}><Text style={[styles.rowBadgeText, { color: '#8e44ad' }]}>FREE</Text></View>
             )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Free Tools */}
-        <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 16, marginTop: 24, marginBottom: 12 }}>
-          <Text style={styles.sectionLabel}>FREE TOOLS</Text>
-          <Text style={styles.sectionTitle}>Available to You</Text>
-        </Animated.View>
-        <Animated.View style={[styles.unifiedCard, { opacity: fadeAnim }]}>
-          <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Hospital')} activeOpacity={0.82}>
-            <View style={[styles.rowIcon, { backgroundColor: '#27ae60' }]}><Ionicons name="location" size={20} color="#fff" /></View>
-            <View style={styles.rowText}><Text style={styles.rowTitle}>Nearby Hospitals</Text><Text style={styles.rowSub}>Find emergency care near you</Text></View>
-            <Ionicons name="chevron-forward" size={16} color="#ccc" />
-          </TouchableOpacity>
-          <View style={styles.cardDivider} />
-          <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Chatbot')} activeOpacity={0.82}>
-            <View style={[styles.rowIcon, { backgroundColor: '#16a085' }]}><Ionicons name="chatbubbles" size={20} color="#fff" /></View>
-            <View style={styles.rowText}><Text style={styles.rowTitle}>MediFirst AI</Text><Text style={styles.rowSub}>Ask any first aid question</Text></View>
-            <Ionicons name="chevron-forward" size={16} color="#ccc" />
           </TouchableOpacity>
         </Animated.View>
 
@@ -395,11 +383,6 @@ export default function GuestHomeScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Floating chat button */}
-      <TouchableOpacity style={styles.floatingBtn} onPress={() => navigation.navigate('Chatbot')} activeOpacity={0.85}>
-        <Ionicons name="chatbubbles" size={26} color="#fff" />
-      </TouchableOpacity>
-
       {/* Info / Sources Modal */}
       <InfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
     </View>
@@ -415,14 +398,13 @@ const styles = StyleSheet.create({
   hdrBrand:     { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap:  { position: 'relative' },
   hdrLogoImg:   { width: 48, height: 48 },
-  hdrPulseDot:  { position: 'absolute', bottom: -1, right: -1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e74c3c' },
-  hdrTitle:     { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 18 },
-  hdrSub:       { fontSize: 9.5, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
+  hdrPulseDot:  { position: 'absolute', bottom: -1, right: 3, width: 12, height: 12, borderRadius: 6, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e74c3c' },
+  hdrTitle:     { fontSize: 17, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 20 },
+  hdrSub:       { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
   hdrActions:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hdrIconBtn:   { width: 40, height: 40, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   hdrStrip:     { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 8 },
-  hdrStripText: { fontSize: 11, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
-  hdrStripLink: { fontSize: 11, color: '#fff', fontWeight: '700', textDecorationLine: 'underline' },
+  hdrStripText: { fontSize: 13, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
 
   sectionLabel: { fontSize: 11, fontWeight: '700', color: '#c0392b', letterSpacing: 1.5, marginBottom: 4 },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1a1a2e' },
@@ -459,13 +441,6 @@ const styles = StyleSheet.create({
   tip:     { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fffbf0', marginHorizontal: 16, marginTop: 16, marginBottom: 0, borderRadius: 12, padding: 14, gap: 10, borderLeftWidth: 4, borderLeftColor: '#f39c12' },
   tipText: { flex: 1, fontSize: 12, color: '#7d6608', lineHeight: 18 },
 
-  floatingBtn: { position: 'absolute', bottom: 60, right: 20,
-    width: 58, height: 58, borderRadius: 29,
-    backgroundColor: '#e74c3c',
-    justifyContent: 'center', alignItems: 'center',
-    elevation: 8, shadowColor: '#c0392b',
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8, },
-
   promptOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   promptCard:    { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', alignItems: 'center', elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 },
   promptIconWrap:  { width: 68, height: 68, borderRadius: 20, backgroundColor: '#8e44ad', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
@@ -499,7 +474,7 @@ const infoStyles = StyleSheet.create({
   sourceRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 6, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
   sourceRowLeft:  { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   sourceTitle:    { fontSize: 13, color: '#333', fontWeight: '500', flex: 1 },
-  appInfo:        { backgroundColor: '#fff', borderRadius: 13, padding: 16, marginTop: 8, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f0' },
-  appInfoTitle:   { fontSize: 15, fontWeight: '800', color: '#1a1a2e', marginBottom: 6 },
-  appInfoText:    { fontSize: 12, color: '#888', marginBottom: 3, textAlign: 'center' },
+  appInfo:        { backgroundColor: '#fff', borderRadius: 13, padding: 16, alignItems: 'center', marginTop: 10 },
+  appInfoTitle:   { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 4 },
+  appInfoText:    { fontSize: 11, color: '#888', marginTop: 2, textAlign: 'center' },
 });

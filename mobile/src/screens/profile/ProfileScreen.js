@@ -1004,9 +1004,9 @@ const s = StyleSheet.create({
   cameraPin:      { position: 'absolute', bottom: -3, right: -3, width: 16, height: 16, borderRadius: 8, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#e74c3c' },
 
   hdrMeta:       { flex: 1 },
-  hdrName:       { fontSize: 15, fontWeight: '900', color: '#fff', marginBottom: 2 },
-  hdrEmail:      { fontSize: 10, color: 'rgba(255,255,255,0.75)', marginBottom: 5, fontStyle: 'italic' },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  hdrName:       { fontSize: 17, fontWeight: '900', color: '#fff', marginBottom: 2 },
+  hdrEmail:      { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 5, fontStyle: 'italic' },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 4, paddingVertical: 3, borderRadius: 20 },
   verifiedText:  { color: '#fff', fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
 
   hdrActions:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -1014,7 +1014,7 @@ const s = StyleSheet.create({
   hdrSignOutBtn: { backgroundColor: 'rgba(0,0,0,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   privacyStrip:  { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 8 },
   privacyDot:    { width: 7, height: 7, borderRadius: 4, backgroundColor: '#2ecc71' },
-  privacyText:   { fontSize: 11, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
+  privacyText:   { fontSize: 13, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
 
   // ── STATS ──
   statsRow:    { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 14, marginTop: 8, borderRadius: 18, paddingVertical: 10, alignItems: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8 },

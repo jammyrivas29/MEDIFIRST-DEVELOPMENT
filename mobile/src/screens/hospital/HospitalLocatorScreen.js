@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Linking, Alert, ActivityIndicator, ScrollView,
-  SafeAreaView, StatusBar, Platform, Modal,
+  SafeAreaView, StatusBar, Platform, Modal, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -49,7 +49,6 @@ function parseElements(elements) {
       const lon  = el.lon ?? el.center?.lon;
       const tags = el.tags || {};
       const name = tags.name || tags['name:en'] || null;
-      // Try several phone tag variants (OSM stores them inconsistently)
       const phone =
         tags.phone ||
         tags['contact:phone'] ||
@@ -79,7 +78,6 @@ function parseElements(elements) {
     .filter(h => h.lat && h.lng && h.name);
 }
 
-// Normalize a phone for the tel: link (keep + and digits only)
 function normalizePhone(p) {
   if (!p) return '';
   return p.replace(/[^\d+]/g, '');
@@ -107,11 +105,12 @@ async function fetchNearbyHospitals(latitude, longitude) {
 }
 
 export default function HospitalLocatorScreen() {
-  const [location,   setLocation]   = useState(null);
-  const [hospitals,  setHospitals]  = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [loadingMsg, setLoadingMsg] = useState('Getting your location…');
-  const [error,      setError]      = useState(null);
+  const [location,        setLocation]        = useState(null);
+  const [hospitals,       setHospitals]       = useState([]);
+  const [searchQuery,     setSearchQuery]     = useState('');
+  const [loading,         setLoading]         = useState(true);
+  const [loadingMsg,      setLoadingMsg]      = useState('Getting your location…');
+  const [error,           setError]           = useState(null);
   const [detailsHospital, setDetailsHospital] = useState(null);
 
   useEffect(() => { initLocation(); }, []);
@@ -120,6 +119,7 @@ export default function HospitalLocatorScreen() {
     setLoading(true);
     setError(null);
     setHospitals([]);
+    setSearchQuery('');
     setLoadingMsg('Getting your location…');
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -169,6 +169,15 @@ export default function HospitalLocatorScreen() {
       Linking.openURL(`https://www.google.com/maps/search/hospitals/@${latitude},${longitude},15z/data=!3m1!4b1`);
     }
   };
+
+  // Filter hospitals based on search input
+  const filteredHospitals = hospitals.filter(item => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const nameMatch = item.name?.toLowerCase().includes(query);
+    const addressMatch = item.address?.toLowerCase().includes(query);
+    return nameMatch || addressMatch;
+  });
 
   if (loading) {
     return (
@@ -222,8 +231,8 @@ export default function HospitalLocatorScreen() {
         {[
           { num: hospitals.length || '—',   label: 'Found',     icon: 'business',         color: '#27ae60' },
           { num: `${SEARCH_RADIUS/1000}km`, label: 'Radius',    icon: 'radio-button-on',  color: '#2980b9' },
-          { num: 'Free',                     label: 'No Key',    icon: 'shield-checkmark', color: '#8e44ad' },
-          { num: 'Live',                     label: 'Real Data', icon: 'checkmark-done',   color: '#e74c3c' },
+          { num: 'Free',                    label: 'No Key',    icon: 'shield-checkmark', color: '#8e44ad' },
+          { num: 'Live',                    label: 'Real Data', icon: 'checkmark-done',   color: '#e74c3c' },
         ].map((s, i, arr) => (
           <React.Fragment key={s.label}>
             <View style={styles.statItem}>
@@ -247,12 +256,30 @@ export default function HospitalLocatorScreen() {
         <Ionicons name="open-outline" size={18} color="rgba(255,255,255,0.8)" style={{ marginRight: 14 }} />
       </TouchableOpacity>
 
+      {/* ── Search Bar ── */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search hospital by name or street..."
+          placeholderTextColor="#aaa"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && Platform.OS !== 'ios' && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
+            <Ionicons name="close-circle" size={18} color="#888" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <View style={styles.sectionRow}>
         <View>
           <Text style={styles.sectionLabel}>NEARBY FACILITIES</Text>
           <Text style={styles.sectionTitle}>
-            {hospitals.length > 0
-              ? `${hospitals.length} Hospitals Near You`
+            {filteredHospitals.length > 0
+              ? `${filteredHospitals.length} ${searchQuery ? 'Matching' : ''} Hospitals`
               : error ? 'Could Not Load' : 'No Hospitals Found'}
           </Text>
         </View>
@@ -284,7 +311,18 @@ export default function HospitalLocatorScreen() {
         </View>
       )}
 
-      {hospitals.map((item, index) => (
+      {!error && hospitals.length > 0 && filteredHospitals.length === 0 && (
+        <View style={styles.errorCard}>
+          <Ionicons name="search-outline" size={32} color="#ccc" />
+          <Text style={styles.errorTitle}>No hospital matches "{searchQuery}"</Text>
+          <Text style={styles.errorSub}>Try checking the spelling or clear the search field.</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => setSearchQuery('')}>
+            <Text style={styles.retryText}>Clear Search</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {filteredHospitals.map((item, index) => (
         <View key={item.id} style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.rankBadge}>
@@ -300,7 +338,7 @@ export default function HospitalLocatorScreen() {
                   <Ionicons name="location" size={11} color="#e74c3c" />
                   <Text style={styles.distText}>{formatDistance(item.distanceMeters)}</Text>
                 </View>
-                {index === 0 && (
+                {item.id === hospitals[0]?.id && (
                   <View style={styles.nearestBadge}>
                     <Text style={styles.nearestText}>⚡ Nearest</Text>
                   </View>
@@ -487,7 +525,35 @@ const styles = StyleSheet.create({
   mapCtaTitle: { fontSize: 14, fontWeight: '800', color: '#fff' },
   mapCtaSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
-  sectionRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 22, marginBottom: 12 },
+  // Search Bar Styles
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 14,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 46,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1a1a2e',
+  },
+  clearBtn: {
+    padding: 4,
+  },
+
+  sectionRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 18, marginBottom: 12 },
   sectionLabel: { fontSize: 11, fontWeight: '700', color: '#27ae60', letterSpacing: 1.5, marginBottom: 3 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1a1a2e' },
   refreshBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#e9f7ef', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },

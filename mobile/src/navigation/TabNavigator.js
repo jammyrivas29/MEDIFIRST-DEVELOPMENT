@@ -43,15 +43,6 @@ function GuidesStack() {
           headerTintColor: '#fff',
         }}
       />
-      <Stack.Screen
-        name="Videos"
-        component={VideoInstructionsScreen}
-        options={{
-          title: 'Video Instructions',
-          headerStyle: { backgroundColor: '#e74c3c' },
-          headerTintColor: '#fff',
-        }}
-      />
     </Stack.Navigator>
   );
 }
@@ -73,11 +64,7 @@ function GuestStack() {
       <Stack.Screen
         name="Chatbot"
         component={ChatbotScreen}
-        options={{
-          title: 'AI Assistant',
-          headerStyle: { backgroundColor: '#e74c3c' },
-          headerTintColor: '#fff',
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Hospital"
@@ -193,7 +180,18 @@ export default function TabNavigator() {
         component={ChatbotScreen}
         options={{
           tabBarButton: () => null,
-          title: 'AI Assistant',
+          headerShown: false,
+        }}
+      />
+      {/* Videos hidden from tab bar but navigable from home tool */}
+      <Tab.Screen
+        name="Videos"
+        component={VideoInstructionsScreen}
+        options={{
+          tabBarButton: () => null,
+          title: 'Video Instructions',
+          headerStyle: { backgroundColor: '#e74c3c' },
+          headerTintColor: '#fff',
         }}
       />
       {/* Alerts: user receives admin emergency alerts */}

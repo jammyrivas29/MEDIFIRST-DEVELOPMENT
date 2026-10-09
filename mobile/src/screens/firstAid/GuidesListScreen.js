@@ -23,7 +23,7 @@ const CATEGORY_META = {
   burns:       { icon: 'flame',       color: '#f39c12', label: 'Burns'        },
   bleeding:    { icon: 'bandage',     color: '#c0392b', label: 'Bleeding'     },
   fractures:   { icon: 'body',        color: '#8e44ad', label: 'Fractures'    },
-  seizures:    { icon: 'pulse',       color: '#2980b9', label: 'Seizure'      },
+  seizure:    { icon: 'pulse',       color: '#2980b9', label: 'Seizure'      },
   stroke:      { icon: 'medkit',      color: '#d35400', label: 'Stroke'       },
   heatstroke:  { icon: 'thermometer', color: '#f39c12', label: 'Heat Stroke'  },
   poisoning:   { icon: 'skull',       color: '#27ae60', label: 'Poisoning'    },
@@ -35,7 +35,7 @@ const SOURCES = [
   { category: '🔥 Burns & Wounds', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat a Burn', url: 'https://www.wikihow.com/Treat-a-Burn' }] },
   { category: '🩹 Bleeding & Wounds', color: '#c0392b', items: [{ title: 'WikiHow — How to Stop a Cut from Bleeding', url: 'https://www.wikihow.com/Stop-Bleeding' }] },
   { category: '🦴 Fractures & Broken Bones', color: '#8e44ad', items: [{ title: 'WikiHow — How to Treat a Broken Foot', url: 'https://www.wikihow.com/Treat-a-Foot-Fracture' }] },
-  { category: '⚡ Seizures', color: '#2980b9', items: [{ title: 'WikiHow — How to Help Someone Having a Seizure', url: 'https://www.wikihow.com/Stop-a-Seizure' }] },
+  { category: '⚡ Seizure', color: '#2980b9', items: [{ title: 'WikiHow — How to Help Someone Having a Seizure', url: 'https://www.wikihow.com/Stop-a-Seizure' }] },
   { category: '🧠 Stroke', color: '#d35400', items: [{ title: 'WikiHow — How to Recognize a Stroke', url: 'https://www.wikihow.com/Identify-if-Someone-Had-a-Stroke' }] },
   { category: '🌡️ Heat Stroke', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat Heat Stroke', url: 'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/extreme-heat-safety/heat-check.html' }] },
   { category: '☠️ Poisoning', color: '#27ae60', items: [{ title: 'WikiHow — How to Treat Poisoning', url: 'https://www.wikihow.com/Treat-Poisoning' }] },
@@ -229,7 +229,7 @@ const LOCAL_GUIDES = [
     _id: 'local_heatstroke',
     title: 'Heat Stroke — Emergency Response',
     description: 'Heat stroke is a serious condition that occurs when the body overheats and cannot cool itself properly. Immediate action is required.',
-    category: 'heatstroke', severity: 'high', isOfflineAvailable: true,
+    category: 'heat_stroke', severity: 'high', isOfflineAvailable: true,
     steps: [
       { stepNumber: 1, title: 'Stay in the shade', description: 'Move the person to a shaded area and help them rest.', image: require('../../../assets/guides/heat_stroke/hs1.jpg') },
       { stepNumber: 2, title: 'Find a cool indoor space', description: 'If your home gets too hot, move the person to a cooler indoor space.', image: require('../../../assets/guides/heat_stroke/hs2.jpg') },
@@ -244,7 +244,7 @@ const LOCAL_GUIDES = [
     _id: 'local_seizure',
     title: 'Seizure — Emergency Response',
     description: 'A seizure is a sudden electrical disturbance in the brain. Knowing how to respond safely can prevent injury.',
-    category: 'seizures', severity: 'high', isOfflineAvailable: true,
+    category: 'seizure', severity: 'high', isOfflineAvailable: true,
     steps: [
       { stepNumber: 1, title: 'Protecting the Person from Harm', description: 'Protect the person from injury during the seizure. Remove nearby hard or sharp objects.', image: require('../../../assets/guides/seizures/seizure1.jpg') },
       { stepNumber: 2, title: 'Reduce the risk of injury by checking the area', description: 'Clear the area of any hard or sharp objects that could cause injury.', image: require('../../../assets/guides/seizures/seizure2.jpg') },
@@ -287,21 +287,6 @@ const LOCAL_GUIDES = [
     ],
     warnings: ['Never induce vomiting unless told to by Poison Control', 'Do not give anything to eat or drink', 'Do not leave the person alone'],
     assumptions: ['Person is unconscious or unresponsive', 'Person is having seizures', 'Severe difficulty breathing', 'Unknown substance was ingested'],
-    },
-    {
-      _id: 'local_heart',
-      title: 'Heart Attack — Emergency Response',
-      description: 'A heart attack (myocardial infarction) happens when blood flow to the heart is blocked. Act fast — every minute matters.',
-      category: 'heartattack', severity: 'critical', isOfflineAvailable: true,
-      steps: [
-        { stepNumber: 1, title: 'Call Emergency Services', description: 'Call 911 (or your local emergency number) immediately. Say you think someone is having a heart attack.', image: require('../../../assets/guides/bleeding/bleeding1.jpg') },
-        { stepNumber: 2, title: 'Keep the Person Calm and Seated', description: 'Have them sit down, rest, and stay as calm as possible. Loosen tight clothing.', image: require('../../../assets/guides/bleeding/bleeding2.jpg') },
-        { stepNumber: 3, title: 'Chew Aspirin if Advised', description: 'If the person is not allergic and it is safe, have them chew a 325 mg aspirin (do not give if told not to by a doctor).', image: require('../../../assets/guides/bleeding/bleeding3.jpg') },
-        { stepNumber: 4, title: 'Monitor and Be Ready to CPR', description: 'Watch for loss of consciousness. If they stop breathing or have no pulse, begin CPR and use an AED if available.', image: require('../../../assets/guides/cpr/cpr1.jpg') },
-        { stepNumber: 5, title: 'Do Not Drive Yourself', description: 'Ambulance crews can begin treatment on the way. Wait for EMS rather than driving.', image: require('../../../assets/guides/bleeding/bleeding5.jpg') },
-      ],
-      warnings: ['Do not let the person walk or exert themselves', 'Do not wait to see if symptoms pass', 'Do not give food, water, or medication other than advised aspirin'],
-      whenToCallEmergency: ['Chest pain or pressure', 'Pain spreading to arm, jaw, or back', 'Shortness of breath', 'Cold sweat, nausea, or lightheadedness'],
     },
     ];
 
@@ -438,7 +423,7 @@ export default function GuidesListScreen({ navigation, route }) {
       <SafeAreaView style={styles.appHeader}>
         <View style={styles.hdrInner}>
           <View style={styles.hdrBrand}>
-            <Text style={styles.hdrTitle}>First Aid Guide</Text>
+            <Text style={styles.hdrTitle}>First Aid Guides</Text>
           </View>
         </View>
         
@@ -458,13 +443,6 @@ export default function GuidesListScreen({ navigation, route }) {
           <Text style={styles.offlineText}>Offline Mode — Showing saved local guides</Text>
         </View>
       )}
-
-      {/* Can't find a guide? Ask the AI */}
-      <TouchableOpacity style={styles.askAiBar} onPress={() => navigation.navigate('Chatbot')} activeOpacity={0.85}>
-        <Ionicons name="chatbubble-ellipses" size={16} color="#fff" />
-        <Text style={styles.askAiText}>Can't find what you need? Ask MediFirst AI</Text>
-        <Ionicons name="chevron-forward" size={16} color="#fff" />
-      </TouchableOpacity>
 
       {/* Search & Active Category Bar */}
       <View style={styles.searchSection}>
@@ -541,7 +519,7 @@ const styles = StyleSheet.create({
   hdrBrand:      { flexDirection: 'row', alignItems: 'center' },
   hdrTitle:      { fontSize: 17, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
   hdrStrip:      { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 7 },
-  hdrStripText:  { fontSize: 11.5, color: '#fff', fontWeight: '500', flex: 1 },
+  hdrStripText:  { fontSize: 13, color: '#fff', fontWeight: '500', flex: 1 },
 
   // Offline Banner
   offlineBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef5ec', paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#fbe3d0' },

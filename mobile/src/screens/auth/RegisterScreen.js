@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, KeyboardAvoidingView, Platform, ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { registerUser, clearError } from '../../store/authSlice';
 
+// Flaticon Padlock image direct URL / asset
+const PADLOCK_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/2889/2889676.png';
+
 const RULES = {
-  firstName:       { validate: v => v.trim().length >= 2,                         error: 'First name required.' },
-  lastName:        { validate: v => v.trim().length >= 2,                         error: 'Last name required.' },
+  firstName:       { validate: v => v.trim().length >= 2,                                error: 'First name required.' },
+  lastName:        { validate: v => v.trim().length >= 2,                                error: 'Last name required.' },
   email:           { validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()), error: 'Enter a valid email.' },
   phoneNumber:     { validate: v => v === '' || /^09\d{9}$/.test(v),             error: 'Must be 11 digits (09XXXXXXXXX).' },
   password:        { validate: v => v.length >= 6,                                error: 'At least 6 characters required.' },
@@ -73,11 +77,20 @@ export default function RegisterScreen({ navigation }) {
               { num: '100%', label: 'Free' },
               { num: '24/7', label: 'Access' },
               { num: '8+',   label: 'Features' },
-              { num: '🔒',   label: 'Private' },
+              { 
+                isIcon: true, 
+                icon: (
+                  <Image 
+                    source={{ uri: PADLOCK_ICON_URL }} 
+                    style={styles.statIcon} 
+                  />
+                ), 
+                label: 'Private' 
+              },
             ].map((s, i, arr) => (
               <React.Fragment key={s.label}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statNum}>{s.num}</Text>
+                  {s.isIcon ? s.icon : <Text style={styles.statNum}>{s.num}</Text>}
                   <Text style={styles.statLabel}>{s.label}</Text>
                 </View>
                 {i < arr.length - 1 && <View style={styles.statDivider} />}
@@ -252,11 +265,13 @@ const styles = StyleSheet.create({
   userInfo:    { flex: 1 },
   userName:    { fontSize: 17, fontWeight: '800', color: '#fff', marginBottom: 2 },
   userEmail:   { fontSize: 12, color: 'rgba(255,255,255,0.78)', marginBottom: 6 },
-  statsRow:    { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  statItem:    { flex: 1, alignItems: 'center' },
-  statNum:     { fontSize: 16, fontWeight: '900', color: '#fff' },
-  statLabel:   { fontSize: 9, color: 'rgba(255,255,255,0.78)', marginTop: 2, textAlign: 'center' },
-  statDivider: { width: 1, height: 22, backgroundColor: 'rgba(255,255,255,0.25)' },
+
+  statsRow:   { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
+  statItem:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  statNum:     { fontSize: 13, fontWeight: '800', color: '#fff' },
+  statIcon:    { width: 16, height: 16, tintColor: '#fff', resizeMode: 'contain' },
+  statLabel:   { fontSize: 10, color: '#fff', marginTop: 2 },
+  statDivider: { width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.25)' },
 
   card: { 
     backgroundColor: '#fff', 

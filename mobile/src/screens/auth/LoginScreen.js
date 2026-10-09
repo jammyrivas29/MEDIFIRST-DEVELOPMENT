@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
   pill:        { flex: 1, alignItems: 'center', justifyContent: 'center' },
   pillText:    { fontSize: 10, fontWeight: '800', color: '#fff' },
   pillDivider: { width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.25)' },
+  
 
   card: {
     backgroundColor: '#fff',
