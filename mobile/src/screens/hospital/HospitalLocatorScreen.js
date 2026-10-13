@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FontAwesome6 } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 
 const SEARCH_RADIUS = 5000;
 const OVERPASS_SERVERS = [
@@ -105,6 +107,8 @@ async function fetchNearbyHospitals(latitude, longitude) {
 }
 
 export default function HospitalLocatorScreen() {
+  const navigation = useNavigation();
+  const isGuest = useSelector((state) => state.auth?.isGuest);
   const [location,        setLocation]        = useState(null);
   const [hospitals,       setHospitals]       = useState([]);
   const [searchQuery,     setSearchQuery]     = useState('');
@@ -216,9 +220,16 @@ export default function HospitalLocatorScreen() {
               <Text style={styles.headerSub}>Find emergency care near you</Text>
             </View>
           </View>
-          <View style={[styles.gpsBadge, { backgroundColor: location ? 'rgba(46,204,113,0.25)' : 'rgba(255,255,255,0.15)' }]}>
-            <View style={[styles.gpsDot, { backgroundColor: location ? '#2ecc71' : '#f39c12' }]} />
-            <Text style={styles.gpsText}>{location ? 'GPS On' : 'No GPS'}</Text>
+          <View style={styles.headerRight}>
+            <View style={[styles.gpsBadge, { backgroundColor: location ? 'rgba(46,204,113,0.25)' : 'rgba(255,255,255,0.15)' }]}>
+              <View style={[styles.gpsDot, { backgroundColor: location ? '#2ecc71' : '#f39c12' }]} />
+              <Text style={styles.gpsText}>{location ? 'GPS On' : 'No GPS'}</Text>
+            </View>
+            {isGuest && (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerCloseBtn} activeOpacity={0.85}>
+                <Ionicons name="close" size={22} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View style={styles.hdrStrip}>
@@ -500,14 +511,16 @@ const styles = StyleSheet.create({
   loadingSubtitle: { fontSize: 13, color: '#888', marginTop: 6 },
 
   header:      { backgroundColor: '#27ae60', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6 },
-  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
-  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, gap: 10 },
+  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   headerIcon:  { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   hdrStrip:     { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 8 },
   hdrLiveDot:   { width: 7, height: 7, borderRadius: 4, backgroundColor: '#2ecc71' },
-  hdrStripText: { fontSize: 11, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
+  hdrStripText: { fontSize: 13, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
   headerTitle: { fontSize: 17, fontWeight: '900', color: '#fff' },
-  headerSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 1 },
+  headerSub:   { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 1 },
   gpsBadge:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   gpsDot:      { width: 7, height: 7, borderRadius: 4 },
   gpsText:     { fontSize: 11, fontWeight: '700', color: '#fff' },

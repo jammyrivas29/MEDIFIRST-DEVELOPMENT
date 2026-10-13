@@ -242,7 +242,7 @@ export default function GuideDetailScreen({ navigation, route }) {
   };
 
   const call911 = () => {
-    Alert.alert('🚨 Call Emergency Services', 'Do you want to place a call to emergency services right now?', [
+    Alert.alert(' Call Emergency Services', 'Do you want to place a call to emergency services right now?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Call Now', style: 'destructive', onPress: () => Linking.openURL('tel:911') },
     ]);

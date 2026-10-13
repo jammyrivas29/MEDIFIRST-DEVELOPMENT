@@ -280,7 +280,7 @@ const s = StyleSheet.create({
   activeDot:       { position: 'absolute', top: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: '#2ecc71', borderWidth: 2, borderColor: '#e74c3c' },
   welcomeInfo:     { flex: 1 },
   welcomeTitle:    { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 1 },
-  welcomeSub:      { fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
+  welcomeSub:      { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
 
   pillsRow:       { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingVertical: 4, paddingHorizontal: 3, alignItems: 'center' },
   pill:           { flex: 1, alignItems: 'center', paddingVertical: 5, borderRadius: 7 },

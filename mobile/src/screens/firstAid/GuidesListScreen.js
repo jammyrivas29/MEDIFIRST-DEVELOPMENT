@@ -293,6 +293,7 @@ const LOCAL_GUIDES = [
     export { LOCAL_GUIDES };
 
 export default function GuidesListScreen({ navigation, route }) {
+  const isGuest = useSelector((state) => state.auth?.isGuest);
   const routeCategory = route.params?.category ?? null;
 
   const [allGuides, setAllGuides]         = useState([]);
@@ -423,8 +424,19 @@ export default function GuidesListScreen({ navigation, route }) {
       <SafeAreaView style={styles.appHeader}>
         <View style={styles.hdrInner}>
           <View style={styles.hdrBrand}>
-            <Text style={styles.hdrTitle}>First Aid Guides</Text>
+            <View style={styles.hdrIconWrap}>
+              <Ionicons name="book" size={20} color="#fff" />
+            </View>
+            <View>
+              <Text style={styles.hdrTitle}>First Aid Guides</Text>
+              <Text style={styles.hdrSub}>Step-by-step first aid instructions</Text>
+            </View>
           </View>
+          {isGuest && (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.hdrCloseBtn} activeOpacity={0.85}>
+              <Ionicons name="close" size={22} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
         
         {/* Sub-Header Strip */}
@@ -515,9 +527,12 @@ const styles = StyleSheet.create({
 
   // Clean Header Styles
   appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 8, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
-  hdrInner:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 15 },
-  hdrBrand:      { flexDirection: 'row', alignItems: 'center' },
+  hdrInner:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 9 },
+  hdrCloseBtn:   { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  hdrBrand:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hdrIconWrap:   { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   hdrTitle:      { fontSize: 17, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  hdrSub:        { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 1 },
   hdrStrip:      { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 7 },
   hdrStripText:  { fontSize: 13, color: '#fff', fontWeight: '500', flex: 1 },
 

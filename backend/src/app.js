@@ -13,6 +13,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const hospitalRoutes = require('./routes/hospitalRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const settingsController = require('./controllers/settingsController');
+const notificationController = require('./controllers/notificationController');
 const errorHandler = require('./middlewares/errorHandler');
 const { apiLimiter } = require('./middlewares/rateLimiter');
 
@@ -45,6 +46,8 @@ app.use('/api/hotlines', (req, res, next) => { // public read of active hotlines
   if (req.method === 'GET' && req.path === '/') return settingsController.getPublicHotlines(req, res, next);
   next();
 });
+
+app.use('/api/notifications/public', notificationController.getPublicNotifications);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.path}` });

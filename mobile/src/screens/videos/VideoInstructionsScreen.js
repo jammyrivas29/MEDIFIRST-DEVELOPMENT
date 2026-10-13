@@ -11,13 +11,13 @@ import { useFocusEffect } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 
 const VIDEOS = [
-  { id: 1,  title: 'CPR Basics for Adults',         category: 'cpr',        duration: '3:45', videoUrl: require('../../../assets/videos/Adult.mp4'),     description: 'Learn the essential steps of performing CPR on adults in emergency situations.' },
+  { id: 1,  title: 'CPR Basics for Adults',        category: 'cpr',        duration: '3:45', videoUrl: require('../../../assets/videos/Adult.mp4'),     description: 'Learn the essential steps of performing CPR on adults in emergency situations.' },
   { id: 2,  title: 'CPR for Children',              category: 'cpr',        duration: '4:10', videoUrl: require('../../../assets/videos/chil.mp4'),      description: 'Step-by-step guide to performing CPR on children and infants safely and effectively.' },
   { id: 3,  title: 'CPR for Baby',                  category: 'cpr',        duration: '2:41', videoUrl: require('../../../assets/videos/baby.mp4'),      description: 'Step-by-step demonstration of the Heimlich maneuver to help someone who is choking.' },
   { id: 4,  title: 'Heimlich Maneuver for Choking', category: 'choking',    duration: '2:41', videoUrl: require('../../../assets/videos/choking.mp4'),   description: 'Step-by-step demonstration of the Heimlich maneuver to help someone who is choking.' },
   { id: 5,  title: 'Treating Burns Properly',       category: 'burns',      duration: '1:30', videoUrl: require('../../../assets/videos/burns.mp4'),     description: 'Learn how to properly treat first, second, and third-degree burns.' },
   { id: 6,  title: 'Controlling Severe Bleeding',   category: 'bleeding',   duration: '4:27', videoUrl: require('../../../assets/videos/bleeding.mp4'),  description: 'Techniques for applying pressure and controlling severe bleeding in emergency situations.' },
-  { id: 7,  title: 'Fracture Immobilization',       category: 'fractures',  duration: '2:52', videoUrl: require('../../../assets/videos/fractures.mp4'), description: 'How to properly immobilize a fractured bone using splints and available materials.' },
+  { id: 7,  title: 'Fracture Immobilization',      category: 'fractures',  duration: '2:52', videoUrl: require('../../../assets/videos/fractures.mp4'), description: 'How to properly immobilize a fractured bone using splints and available materials.' },
   { id: 8,  title: 'Seizure Guidelines',            category: 'seizures',   duration: '2:35', videoUrl: require('../../../assets/videos/seizures.mp4'),  description: 'Learn how to safely assist someone experiencing a seizure.' },
   { id: 9,  title: 'Stroke Recognition',            category: 'stroke',     duration: '3:15', videoUrl: require('../../../assets/videos/stroke.mp4'),    description: 'Recognize the signs of a stroke and learn how to respond quickly.' },
   { id: 10, title: 'Poisoning Response',            category: 'poisoning',  duration: '2:20', videoUrl: require('../../../assets/videos/poison.mp4'),    description: 'Steps to take if you suspect someone has been poisoned.' },
@@ -48,6 +48,8 @@ function ProgressBar({ progress, currentTime, duration, onSeek }) {
     onSeek(ratio * duration);
   };
 
+  const pct = Math.min(Math.max((progress || 0) * 100, 0), 100);
+
   return (
     <TouchableOpacity
       ref={barRef}
@@ -57,15 +59,13 @@ function ProgressBar({ progress, currentTime, duration, onSeek }) {
       style={pS.track}
       hitSlop={{ top: 12, bottom: 12 }}
     >
-      {/* buffered bg */}
       <View style={pS.buffered} />
-      {/* fill */}
-      <View style={[pS.fill, { width: `${Math.min(progress * 100, 100)}%` }]} />
-      {/* thumb */}
-      <View style={[pS.thumb, { left: `${Math.min(progress * 100, 100)}%` }]} />
+      <View style={[pS.fill, { width: `${pct}%` }]} />
+      <View style={[pS.thumb, { left: `${pct}%` }]} />
     </TouchableOpacity>
   );
 }
+
 const pS = StyleSheet.create({
   track:    { height: 3, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2, position: 'relative', justifyContent: 'center' },
   buffered: { position: 'absolute', left: 0, right: 0, height: '100%', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2 },
@@ -75,12 +75,12 @@ const pS = StyleSheet.create({
 
 // ── Video Player ──────────────────────────────────────────────────────────────
 function VideoPlayer({ selectedVideo, onClose }) {
-  const [currentTime, setCurrentTime]           = useState(0);
-  const [duration, setDuration]                 = useState(0);
-  const [isPlaying, setIsPlaying]               = useState(true);
-  const [isReady, setIsReady]                   = useState(false);
-  const [controlsVisible, setControlsVisible]   = useState(true);
-  const [isEnded, setIsEnded]                   = useState(false);
+  const [currentTime, setCurrentTime]         = useState(0);
+  const [duration, setDuration]               = useState(0);
+  const [isPlaying, setIsPlaying]             = useState(true);
+  const [isReady, setIsReady]                 = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [isEnded, setIsEnded]                 = useState(false);
   const hideTimer = useRef(null);
 
   const player = useVideoPlayer(selectedVideo.videoUrl, (p) => {
@@ -120,7 +120,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
     if (eventTime !== undefined && eventTime >= 0) {
       setCurrentTime(eventTime);
       if (player?.duration > 0 && duration === 0) setDuration(player.duration);
-      // detect end
       if (player?.duration > 0 && eventTime >= player.duration - 0.5) {
         setIsEnded(true);
         setIsPlaying(false);
@@ -142,26 +141,43 @@ function VideoPlayer({ selectedVideo, onClose }) {
     showControls();
   }, [player, isPlaying]);
 
+  // Fixed Skip / Rewind functionality for expo-video
   const seekBy = useCallback((seconds) => {
-    if (!player || !duration) return;
+    if (!player) return;
     try {
-      const next = Math.max(0, Math.min(duration, currentTime + seconds));
-      player.seek(next);
-      setCurrentTime(next);
-    } catch (_) {}
-    showControls();
-  }, [player, duration, currentTime]);
+      const maxTime = duration > 0 ? duration : (player.duration || 0);
+      const currentPos = player.currentTime || 0;
+      const nextTime = Math.max(0, Math.min(maxTime, currentPos + seconds));
 
-  const seekTo = useCallback((time) => {
-    if (!player || !duration) return;
-    try { player.seek(time); setCurrentTime(time); } catch (_) {}
+      // Direct assignment required by expo-video API
+      player.currentTime = nextTime;
+      setCurrentTime(nextTime);
+    } catch (err) {
+      console.warn('Seek error:', err);
+    }
     showControls();
-  }, [player, duration]);
+  }, [player, duration, showControls]);
+
+  // Fixed Scrub / Seek functionality for expo-video
+  const seekTo = useCallback((time) => {
+    if (!player) return;
+    try {
+      player.currentTime = time;
+      setCurrentTime(time);
+    } catch (err) {
+      console.warn('SeekTo error:', err);
+    }
+    showControls();
+  }, [player, showControls]);
 
   const handleReplay = useCallback(() => {
-    try { player.seek(0); player.play(); setIsEnded(false); } catch (_) {}
+    try {
+      player.currentTime = 0;
+      player.play();
+      setIsEnded(false);
+    } catch (_) {}
     showControls();
-  }, [player]);
+  }, [player, showControls]);
 
   const handleClose = useCallback(() => {
     try { player?.pause(); } catch (_) {}
@@ -172,7 +188,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
 
   return (
     <View style={vS.root}>
-
       {/* ── VIDEO BOX ── */}
       <View style={vS.videoBox}>
         <VideoView
@@ -187,7 +202,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
         <TouchableOpacity activeOpacity={1} style={vS.overlay} onPress={showControls}>
           {controlsVisible && (
             <View style={vS.controlsWrap}>
-
               {/* TOP BAR */}
               <View style={vS.topBar}>
                 <TouchableOpacity onPress={handleClose} style={vS.backBtn} activeOpacity={0.8}>
@@ -196,15 +210,13 @@ function VideoPlayer({ selectedVideo, onClose }) {
                 <Text style={vS.topTitle} numberOfLines={1}>{selectedVideo.title}</Text>
               </View>
 
-              {/* CENTER CONTROLS */}
+              {/* CENTER CONTROLS (-10s / PLAY / +10s) */}
               <View style={vS.centerRow}>
-                {/* -10 */}
                 <TouchableOpacity onPress={() => seekBy(-10)} style={vS.seekBtn} activeOpacity={0.75}>
-                  <Ionicons name="play-back-outline" size={26} color="#fff" />
-                  <Text style={vS.seekLabel}>10</Text>
+                  <Ionicons name="play-back-outline" size={24} color="#fff" />
+                  <Text style={vS.seekLabel}>-10s</Text>
                 </TouchableOpacity>
 
-                {/* PLAY / PAUSE / REPLAY */}
                 <TouchableOpacity
                   onPress={isEnded ? handleReplay : togglePlayPause}
                   style={vS.playBtn}
@@ -217,10 +229,9 @@ function VideoPlayer({ selectedVideo, onClose }) {
                   />
                 </TouchableOpacity>
 
-                {/* +10 */}
                 <TouchableOpacity onPress={() => seekBy(10)} style={vS.seekBtn} activeOpacity={0.75}>
-                  <Ionicons name="play-forward-outline" size={26} color="#fff" />
-                  <Text style={vS.seekLabel}>10</Text>
+                  <Ionicons name="play-forward-outline" size={24} color="#fff" />
+                  <Text style={vS.seekLabel}>+10s</Text>
                 </TouchableOpacity>
               </View>
 
@@ -237,12 +248,10 @@ function VideoPlayer({ selectedVideo, onClose }) {
                 </View>
                 <Text style={vS.timeText}>{duration > 0 ? formatTime(duration) : selectedVideo.duration}</Text>
               </View>
-
             </View>
           )}
         </TouchableOpacity>
 
-        {/* Loading overlay */}
         {!isReady && (
           <View style={vS.loadingOverlay}>
             <Text style={vS.loadingText}>Loading...</Text>
@@ -253,18 +262,14 @@ function VideoPlayer({ selectedVideo, onClose }) {
       {/* ── VIDEO INFO ── */}
       <ScrollView style={vS.infoScroll} showsVerticalScrollIndicator={false}>
         <View style={vS.infoBox}>
-
-          {/* Category badge */}
           <View style={[vS.catBadge, { backgroundColor: (CATEGORY_COLORS[selectedVideo.category] || '#e74c3c') + '18' }]}>
             <Text style={[vS.catBadgeText, { color: CATEGORY_COLORS[selectedVideo.category] || '#e74c3c' }]}>
               {selectedVideo.category?.toUpperCase()}
             </Text>
           </View>
 
-          {/* Title */}
           <Text style={vS.infoTitle}>{selectedVideo.title}</Text>
 
-          {/* Duration row */}
           <View style={vS.durationRow}>
             <Ionicons name="time-outline" size={15} color="#aaa" />
             <Text style={vS.durationText}>
@@ -272,14 +277,11 @@ function VideoPlayer({ selectedVideo, onClose }) {
             </Text>
           </View>
 
-          {/* Divider */}
           <View style={vS.divider} />
 
-          {/* Description */}
           <Text style={vS.descLabel}>About this video</Text>
           <Text style={vS.descText}>{selectedVideo.description}</Text>
 
-          {/* Controls hint */}
           <View style={vS.hintRow}>
             <View style={vS.hintItem}>
               <Ionicons name="play-back-outline" size={18} color="#e74c3c" />
@@ -290,7 +292,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
               <Text style={vS.hintText}>Tap +10s to skip</Text>
             </View>
           </View>
-
         </View>
       </ScrollView>
     </View>
@@ -300,20 +301,20 @@ function VideoPlayer({ selectedVideo, onClose }) {
 // ── Player Styles ─────────────────────────────────────────────────────────────
 const vS = StyleSheet.create({
   root:    { flex: 1, backgroundColor: '#0f0f0f' },
-  videoBox:{ width, backgroundColor: '#000' },
+  videoBox:{ width, backgroundColor: '#000', paddingTop: StatusBar.currentHeight || 0 },
   video:   { width, height: width * 9 / 16 },
 
   overlay:      { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   controlsWrap: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'space-between' },
 
-  topBar:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 8, gap: 10 },
-  backBtn:   { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  topTitle:  { flex: 1, color: '#fff', fontSize: 14, fontWeight: '700' },
+  topBar:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: (StatusBar.currentHeight || 24) + 10, paddingBottom: 8, gap: 10 },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  topTitle:{ flex: 1, color: '#fff', fontSize: 14, fontWeight: '700' },
 
-  centerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 32 },
-  seekBtn:   { alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.12)', gap: 2 },
-  seekLabel: { color: '#fff', fontSize: 11, fontWeight: '800' },
-  playBtn:   { width: 68, height: 68, borderRadius: 34, backgroundColor: '#e74c3c', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#e74c3c', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.5, shadowRadius: 8 },
+  centerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 28 },
+  seekBtn:   { alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', gap: 1 },
+  seekLabel: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  playBtn:   { width: 64, height: 64, borderRadius: 32, backgroundColor: '#e74c3c', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#e74c3c', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.5, shadowRadius: 8 },
 
   bottomBar:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
   timeText:     { color: '#fff', fontSize: 12, fontWeight: '600', minWidth: 36 },
@@ -364,20 +365,18 @@ export default function VideoInstructionsScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-
         {/* ── HEADER ── */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.headerIconBox}>
+            <Ionicons name="play-circle" size={24} color="#fff" />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>First Aid Videos</Text>
             <Text style={styles.headerSub}>{VIDEOS.length} videos available</Text>
           </View>
-          <View style={styles.headerBadge}>
-            <Ionicons name="play-circle" size={18} color="#fff" />
-            <Text style={styles.headerBadgeText}>{VIDEOS.length}</Text>
-          </View>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerCloseBtn}>
+            <Ionicons name="close" size={22} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         {/* ── SECTION LABEL ── */}
@@ -394,7 +393,6 @@ export default function VideoInstructionsScreen({ route, navigation }) {
             onPress={() => setSelectedVideo(video)}
             activeOpacity={0.82}
           >
-            {/* Thumbnail */}
             <View style={[styles.thumbnail, { backgroundColor: CATEGORY_COLORS[video.category] || '#e74c3c' }]}>
               <Ionicons name="play-circle" size={36} color="rgba(255,255,255,0.9)" />
               <View style={styles.durationBadge}>
@@ -403,7 +401,6 @@ export default function VideoInstructionsScreen({ route, navigation }) {
               </View>
             </View>
 
-            {/* Content */}
             <View style={styles.cardContent}>
               <View style={[styles.catTag, { backgroundColor: (CATEGORY_COLORS[video.category] || '#e74c3c') + '18' }]}>
                 <Text style={[styles.catTagText, { color: CATEGORY_COLORS[video.category] || '#e74c3c' }]}>
@@ -427,8 +424,6 @@ export default function VideoInstructionsScreen({ route, navigation }) {
             Watch these videos <Text style={{ fontWeight: '700', color: '#856404' }}>before an emergency</Text> so you'll be prepared when it matters most.
           </Text>
         </View>
-
-        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -437,22 +432,18 @@ export default function VideoInstructionsScreen({ route, navigation }) {
 // ── List Styles ───────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f6f8' },
-  list:      { paddingBottom: 20 },
+  list:      { paddingBottom: 8 },
 
-  // Header
-  header:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e74c3c', paddingHorizontal: 14, paddingVertical: 16, paddingTop: 20, paddingBottom: 10, gap: 12 },
-  backBtn:         { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' },
+  header:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e74c3c', paddingHorizontal: 14, paddingVertical: 16, paddingTop: 55, paddingBottom: 10, gap: 12 },
+  headerIconBox:   { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   headerTitle:     { fontSize: 18, fontWeight: '900', color: '#fff' },
   headerSub:       { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
-  headerBadge:     { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  headerBadgeText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  headerCloseBtn:  { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
 
-  // Section
   sectionRow:  { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 10 },
   sectionTitle:{ fontSize: 16, fontWeight: '700', color: '#1a1a2e' },
   sectionSub:  { fontSize: 12, color: '#aaa', marginTop: 3 },
 
-  // Video Card
   videoCard: {
     flexDirection: 'row', backgroundColor: '#fff',
     borderRadius: 14, marginHorizontal: 16, marginBottom: 10,
@@ -480,7 +471,6 @@ const styles = StyleSheet.create({
   cardTitle:  { fontSize: 13, fontWeight: '700', color: '#1a1a2e', marginBottom: 4, lineHeight: 18 },
   cardDesc:   { fontSize: 11, color: '#999', lineHeight: 16 },
 
-  // Tip
   tipCard: {
     flexDirection: 'row', alignItems: 'flex-start',
     backgroundColor: '#fffbf0', margin: 16, borderRadius: 14,

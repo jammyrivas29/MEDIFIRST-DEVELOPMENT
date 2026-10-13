@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, Linking, Image, Modal,
+  ScrollView, Alert, Linking, Image,
   Platform, SafeAreaView, StatusBar,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -39,76 +39,12 @@ const FIRST_AID_FACTS = [
   { fact: 'Only 46% of cardiac arrest victims outside hospitals receive bystander CPR.', icon: 'people',      color: '#16a085' },
 ];
 
-const SOURCES = [
-  { category: '🫀 CPR & Cardiac Arrest', color: '#e74c3c', items: [{ title: 'WikiHow — How to Perform CPR on an Adult, Child, Baby', url: 'https://www.wikihow.com/Perform-CPR' }] },
-  { category: '😮‍💨 Choking', color: '#e67e22', items: [{ title: 'WikiHow — How to Help a Choking Victim', url: 'https://www.wikihow.com/Help-a-Choking-Victim' }] },
-  { category: '🔥 Burns & Wounds', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat a Burn', url: 'https://www.wikihow.com/Treat-a-Burn' }] },
-  { category: '🩹 Bleeding & Wounds', color: '#c0392b', items: [{ title: 'WikiHow — How to Stop a Cut from Bleeding', url: 'https://www.wikihow.com/Stop-Bleeding' }] },
-  { category: '🦴 Fractures & Broken Bones', color: '#8e44ad', items: [{ title: 'WikiHow — How to Treat a Broken Foot', url: 'https://www.wikihow.com/Treat-a-Foot-Fracture' }] },
-  { category: '⚡ Seizures', color: '#2980b9', items: [{ title: 'WikiHow — How to Help Someone Having a Seizure', url: 'https://www.wikihow.com/Stop-a-Seizure' }] },
-  { category: '🧠 Stroke', color: '#d35400', items: [{ title: 'WikiHow — How to Recognize a Stroke', url: 'https://www.wikihow.com/Identify-if-Someone-Had-a-Stroke' }] },
-  { category: '🌡️ Heat Stroke', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat Heat Stroke', url: 'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/extreme-heat-safety/heat-check.html' }] },
-  { category: '☠️ Poisoning', color: '#27ae60', items: [{ title: 'WikiHow — How to Treat Poisoning', url: 'https://www.wikihow.com/Treat-Poisoning' }] },
-  { category: '🏥 Hospital & Emergency Locator', color: '#27ae60', items: [{ title: 'OpenStreetMap — Overpass API', url: 'https://overpass-api.de' }, { title: 'OpenStreetMap Foundation', url: 'https://www.openstreetmap.org' }] },
-  { category: '🤖 AI Assistant', color: '#16a085', items: [{ title: 'Groq AI — LLaMA 3.3 Model', url: 'https://console.groq.com' }, { title: 'Meta LLaMA 3 — Open Source LLM', url: 'https://ai.meta.com/llama/' }] },
-  { category: '📱 App Technology', color: '#34495e', items: [{ title: 'React Native — Mobile Framework', url: 'https://reactnative.dev' }, { title: 'Expo — Development Platform', url: 'https://expo.dev' }, { title: 'Node.js + MongoDB — Backend', url: 'https://nodejs.org' }] },
-];
-
-function InfoModal({ visible, onClose }) {
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={infoStyles.container}>
-        <View style={infoStyles.header}>
-          <View style={infoStyles.headerLeft}>
-            <View style={infoStyles.headerIcon}><Ionicons name="information-circle" size={22} color="#fff" /></View>
-            <View>
-              <Text style={infoStyles.headerTitle}>Sources & References</Text>
-              <Text style={infoStyles.headerSub}>MediFirst App v1.0.0</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={infoStyles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={20} color="#555" />
-          </TouchableOpacity>
-        </View>
-        <View style={infoStyles.disclaimer}>
-          <Ionicons name="warning" size={14} color="#856404" />
-          <Text style={infoStyles.disclaimerText}>MediFirst provides general first aid guidance only. Always consult a medical professional for emergencies.</Text>
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-          {SOURCES.map((section) => (
-            <View key={section.category} style={infoStyles.section}>
-              <View style={infoStyles.sectionHeader}>
-                <View style={[infoStyles.sectionDot, { backgroundColor: section.color }]} />
-                <Text style={infoStyles.sectionTitle}>{section.category}</Text>
-              </View>
-              {section.items.map((item, idx) => (
-                <TouchableOpacity key={idx} style={infoStyles.sourceRow} onPress={() => Linking.openURL(item.url)} activeOpacity={0.75}>
-                  <View style={infoStyles.sourceRowLeft}>
-                    <Ionicons name="link" size={13} color={section.color} />
-                    <Text style={infoStyles.sourceTitle}>{item.title}</Text>
-                  </View>
-                  <Ionicons name="open-outline" size={14} color="#ccc" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
-          <View style={infoStyles.appInfo}>
-            <Text style={infoStyles.appInfoTitle}>MediFirst — First Aid Assistant</Text>
-            <Text style={infoStyles.appInfoText}>Version 1.0.0 · Built for emergency preparedness</Text>
-            <Text style={infoStyles.appInfoText}>© 2026 MediFirst Team. All rights reserved.</Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
-  );
-}
 
 export default function UserHomeScreen({ navigation }) {
   const dispatch  = useDispatch();
   const { user }  = useSelector((state) => state.auth);
   const firstName = user?.firstName || null;
   const [locating,    setLocating]    = useState(false);
-  const [infoVisible, setInfoVisible] = useState(false);
 
   const handleToolPress = (action) => {
     switch (action) {
@@ -128,7 +64,7 @@ export default function UserHomeScreen({ navigation }) {
   };
 
   const handleCall911 = () => {
-    Alert.alert('🚨 Call 911', 'Do you want to call emergency services?', [
+    Alert.alert(' Call 911', 'Do you want to call emergency services?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Call Now', style: 'destructive', onPress: () => Linking.openURL('tel:911') },
     ]);
@@ -171,7 +107,10 @@ export default function UserHomeScreen({ navigation }) {
               </View>
             </View>
             <View style={styles.hdrActions}>
-              <TouchableOpacity style={styles.hdrIconBtn} onPress={() => setInfoVisible(true)} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.hdrIconBtn} onPress={handleLogout} activeOpacity={0.85}>
+                <Ionicons name="log-out-outline" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.hdrIconBtn} onPress={() => navigation.navigate('Sources')} activeOpacity={0.85}>
                 <Ionicons name="information-circle-outline" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -242,9 +181,6 @@ export default function UserHomeScreen({ navigation }) {
       <TouchableOpacity style={styles.floatingBtn} onPress={() => navigation.navigate('Chatbot')} activeOpacity={0.85}>
         <Ionicons name="chatbubbles" size={26} color="#fff" />
       </TouchableOpacity>
-
-      {/* ══ INFO / SOURCES MODAL ══ */}
-      <InfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
     </>
   );
 }
@@ -259,7 +195,7 @@ const styles = StyleSheet.create({
   hdrLogoWrap:   { position: 'relative' },
   hdrLogoImg:    { width: 50, height: 50, borderRadius: 12 },
   hdrPulseDot:   { position: 'absolute', bottom: -1, right: 3, width: 12, height: 12, borderRadius: 6, backgroundColor: '#27ae60', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e74c3c' },
-  hdrTitle:      { fontSize: 17, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 20 },
+  hdrTitle:      { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 0.5, lineHeight: 20 },
   hdrSub:        { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
   hdrActions:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hdrIconBtn:    { width: 40, height: 40, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
@@ -314,26 +250,4 @@ const styles = StyleSheet.create({
     elevation: 8, shadowColor: '#c0392b',
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8,
   },
-});
-
-const infoStyles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#f5f6f8' },
-  header:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 14 },
-  headerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerIcon:    { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  headerTitle:   { fontSize: 17, fontWeight: '800', color: '#fff' },
-  headerSub:     { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 },
-  closeBtn:      { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.9)', justifyContent: 'center', alignItems: 'center' },
-  disclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fef9e7', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#fef0c0' },
-  disclaimerText: { flex: 1, fontSize: 11, color: '#856404', lineHeight: 16 },
-  section:       { marginBottom: 18 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  sectionDot:    { width: 10, height: 10, borderRadius: 5 },
-  sectionTitle:  { fontSize: 14, fontWeight: '800', color: '#1a1a2e' },
-  sourceRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 6, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  sourceRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  sourceTitle:   { fontSize: 13, color: '#333', fontWeight: '500', flex: 1 },
-  appInfo:      { backgroundColor: '#fff', borderRadius: 13, padding: 16, marginTop: 8, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f0' },
-  appInfoTitle: { fontSize: 15, fontWeight: '800', color: '#1a1a2e', marginBottom: 6 },
-  appInfoText:  { fontSize: 12, color: '#888', marginBottom: 3, textAlign: 'center' },
 });

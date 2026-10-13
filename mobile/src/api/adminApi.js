@@ -70,6 +70,12 @@ export const getUserNotifications = async () => {
   return response.data;
 };
 
+// ── Public (guest) view: active admin broadcasts, no auth needed ──
+export const getPublicNotifications = async () => {
+  const response = await api.get('/notifications/public');
+  return response.data;
+};
+
 export const deleteMyNotification = async (id) => {
   const response = await api.delete(`/user/notifications/${id}`);
   return response.data;

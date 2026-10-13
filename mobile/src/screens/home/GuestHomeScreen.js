@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Animated, Linking, Image,
@@ -8,9 +8,12 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logout, setAuthInitialRoute } from '../../store/authSlice';
+import { setUnread, loadSeenIds, loadDismissedIds, computeUnread, markAllSeen, markOneSeen } from '../../store/notifSlice';
+import { getPublicNotifications } from '../../api/adminApi';
 
 const GUIDES_DOWNLOAD_KEY   = 'medifirst_guides_downloaded';
 const FIRST_LAUNCH_KEY      = 'medifirst_first_launch_done';
+const SEEN_ALERTS_KEY       = 'medifirst_seen_alerts';
 const TOTAL_GUIDES          = 9;
 
 const LOCKED_FEATURES = [
@@ -42,6 +45,14 @@ const GUIDE_PREVIEWS = [
   { id: 'local_poison',     icon: 'skull',       color: '#27ae60', label: 'Poisoning'    },
 ];
 
+// Same icon/color mapping as the logged-in NotificationsScreen so alerts read identically
+const ALERT_TYPE_META = {
+  emergency: { icon: 'warning',             color: '#e74c3c', bg: '#fdecea', label: 'EMERGENCY'   },
+  alert:     { icon: 'megaphone',           color: '#e67e22', bg: '#fef5ec', label: 'ADMIN ALERT' },
+  update:    { icon: 'refresh-circle',      color: '#2980b9', bg: '#eaf2fd', label: 'SYSTEM UPDATE' },
+  info:      { icon: 'information-circle',  color: '#27ae60', bg: '#e8f8f5', label: 'INFO'        },
+};
+
 const SOURCES = [
   { category: '🫀 CPR & Cardiac Arrest', color: '#e74c3c', items: [{ title: 'WikiHow — How to Perform CPR on an Adult, Child, Baby', url: 'https://www.wikihow.com/Perform-CPR' }] },
   { category: '😮‍💨 Choking', color: '#e67e22', items: [{ title: 'WikiHow — How to Help a Choking Victim', url: 'https://www.wikihow.com/Help-a-Choking-Victim' }] },
@@ -57,57 +68,8 @@ const SOURCES = [
   { category: '📱 App Technology', color: '#34495e', items: [{ title: 'React Native — Mobile Framework', url: 'https://reactnative.dev' }, { title: 'Expo — Development Platform', url: 'https://expo.dev' }, { title: 'Node.js + MongoDB — Backend', url: 'https://nodejs.org' }] },
 ];
 
-function InfoModal({ visible, onClose }) {
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={infoStyles.container}>
-        <View style={infoStyles.header}>
-          <View style={infoStyles.headerLeft}>
-            <View style={infoStyles.headerIcon}><Ionicons name="information-circle" size={22} color="#fff" /></View>
-            <View>
-              <Text style={infoStyles.headerTitle}>Sources & References</Text>
-              <Text style={infoStyles.headerSub}>MediFirst App v1.0.0</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={infoStyles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={20} color="#555" />
-          </TouchableOpacity>
-        </View>
-        <View style={infoStyles.disclaimer}>
-          <Ionicons name="warning" size={14} color="#856404" />
-          <Text style={infoStyles.disclaimerText}>MediFirst provides general first aid guidance only. Always consult a medical professional for emergencies.</Text>
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-          {SOURCES.map((section) => (
-            <View key={section.category} style={infoStyles.section}>
-              <View style={infoStyles.sectionHeader}>
-                <View style={[infoStyles.sectionDot, { backgroundColor: section.color }]} />
-                <Text style={infoStyles.sectionTitle}>{section.category}</Text>
-              </View>
-              {section.items.map((item, idx) => (
-                <TouchableOpacity key={idx} style={infoStyles.sourceRow} onPress={() => Linking.openURL(item.url)} activeOpacity={0.75}>
-                  <View style={infoStyles.sourceRowLeft}>
-                    <Ionicons name="link" size={13} color={section.color} />
-                    <Text style={infoStyles.sourceTitle}>{item.title}</Text>
-                  </View>
-                  <Ionicons name="open-outline" size={14} color="#ccc" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
-          <View style={infoStyles.appInfo}>
-            <Text style={infoStyles.appInfoTitle}>MediFirst — First Aid Assistant</Text>
-            <Text style={infoStyles.appInfoText}>Version 1.0.0 · Built for emergency preparedness</Text>
-            <Text style={infoStyles.appInfoText}>© 2026 MediFirst Team. All rights reserved.</Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
-  );
-}
-
 export default function GuestHomeScreen({ navigation }) {
-  const dispatch  = useDispatch();
+  const dispatch = useDispatch();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -115,7 +77,9 @@ export default function GuestHomeScreen({ navigation }) {
   const [downloading,      setDownloading]      = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [promptVisible,    setPromptVisible]    = useState(false);
-  const [infoVisible,      setInfoVisible]      = useState(false);
+  const [alerts,           setAlerts]           = useState([]);
+  const [seenAlertIds,     setSeenAlertIds]     = useState([]);
+  const unreadAlerts = alerts.filter(a => !seenAlertIds.includes(a._id)).length;
 
   useEffect(() => {
     Animated.parallel([
@@ -124,6 +88,12 @@ export default function GuestHomeScreen({ navigation }) {
     ]).start();
     initApp();
   }, []);
+
+  const unsub = useRef(null);
+  useEffect(() => {
+    unsub.current = navigation.addListener('focus', () => { loadAlerts(); });
+    return () => { if (unsub.current) unsub.current(); };
+  }, [navigation]);
 
   const initApp = async () => {
     try {
@@ -137,6 +107,27 @@ export default function GuestHomeScreen({ navigation }) {
         setTimeout(() => setPromptVisible(true), 600);
       }
     } catch (_) {}
+    loadAlerts();
+  };
+
+  const loadAlerts = async () => {
+    try {
+      const d = await getPublicNotifications();
+      const list = d.notifications || [];
+      setAlerts(list);
+      const [seen, dismissed] = await Promise.all([loadSeenIds(), loadDismissedIds()]);
+      setSeenAlertIds(seen);
+      const visible = list.filter((n) => !dismissed.includes(n._id));
+      dispatch(setUnread(computeUnread(visible, seen)));
+    } catch (_) {}
+  };
+
+  const openAlerts = () => {
+    navigation.navigate('GuestAlerts');
+  };
+
+  const openSources = () => {
+    navigation.navigate('Sources');
   };
 
   const dismissPrompt = async () => {
@@ -261,7 +252,7 @@ export default function GuestHomeScreen({ navigation }) {
               </View>
             </View>
             <View style={styles.hdrActions}>
-              <TouchableOpacity style={styles.hdrIconBtn} onPress={() => setInfoVisible(true)} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.hdrIconBtn} onPress={openSources} activeOpacity={0.85}>
                 <Ionicons name="information-circle-outline" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -298,6 +289,21 @@ export default function GuestHomeScreen({ navigation }) {
             <View style={[styles.rowIcon, { backgroundColor: '#2980b9' }]}><Ionicons name="medical" size={20} color="#fff" /></View>
             <View style={styles.rowText}><Text style={styles.rowTitle}>First Aid Guides</Text><Text style={styles.rowSub}>CPR, burns, choking & more — offline</Text></View>
             <View style={[styles.rowBadge, { backgroundColor: '#e8f4fb' }]}><Text style={styles.rowBadgeText}>FREE</Text></View>
+          </TouchableOpacity>
+          <View style={styles.cardDivider} />
+          <TouchableOpacity style={styles.cardRow} onPress={openAlerts} activeOpacity={0.82}>
+            <View style={styles.rowIconWrap}>
+              <View style={[styles.rowIcon, { backgroundColor: '#e67e22' }]}><Ionicons name="notifications" size={20} color="#fff" /></View>
+              {alerts.length > 0 && <View style={styles.iconDot} />}
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowTitle}>Alerts</Text>
+              <Text style={styles.rowSub}>Emergency alerts &amp; announcements</Text>
+            </View>
+            {alerts.length > 0
+              ? <View style={[styles.rowBadge, { backgroundColor: '#fdf0e5' }]}><Text style={[styles.rowBadgeText, { color: '#e67e22' }]}>+{alerts.length}</Text></View>
+              : <View style={[styles.rowBadge, { backgroundColor: '#f5f6f8' }]}><Text style={[styles.rowBadgeText, { color: '#999' }]}>NONE</Text></View>
+            }
           </TouchableOpacity>
           <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={() => handleDownload(false)} activeOpacity={0.82} disabled={downloading}>
@@ -382,9 +388,6 @@ export default function GuestHomeScreen({ navigation }) {
           <Text style={styles.tipText}>In any emergency, <Text style={{ fontWeight: '700' }}>call 911 first</Text> before attempting first aid.</Text>
         </View>
       </ScrollView>
-
-      {/* Info / Sources Modal */}
-      <InfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
     </View>
   );
 }
@@ -392,6 +395,73 @@ export default function GuestHomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#f5f6f8' },
   contentContainer: { paddingBottom: 24 },
+  // ══════ GUEST ALERTS MODAL (mirrors NotificationsScreen) ══════
+  gRoot: { flex: 1, backgroundColor: '#f5f6f8' },
+  gSafeArea: { backgroundColor: '#e74c3c' },
+  gHeader: {
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    paddingTop: 15,
+  },
+  gCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  gWelcomeRow:      { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  gWelcomeIconWrap: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative' },
+  gActiveDot:       { position: 'absolute', top: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: '#2ecc71', borderWidth: 2, borderColor: '#e74c3c' },
+  gWelcomeInfo:     { flex: 1 },
+  gWelcomeTitle:    { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 1 },
+  gWelcomeSub:      { fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 0, fontStyle: 'italic' },
+  gPillsRow:       { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingVertical: 4, paddingHorizontal: 3, alignItems: 'center' },
+  gPill:           { flex: 1, alignItems: 'center', paddingVertical: 5, borderRadius: 7 },
+  gPillActive:     { backgroundColor: '#fff' },
+  gPillText:       { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.85)', textAlign: 'center' },
+  gPillTextActive: { color: '#e74c3c', fontWeight: '800' },
+  gPillDivider:    { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.25)' },
+  gCardContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    flex: 1,
+    minHeight: 450,
+  },
+  gListHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  gAdminPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eafaf1', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  gAdminPillTxt: { fontSize: 10, fontWeight: '800', color: '#27ae60', letterSpacing: 0.3 },
+  gMarkReadBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 8 },
+  gMarkReadTxt: { fontSize: 12, color: '#e74c3c', fontWeight: '700' },
+  gNotifCard: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#edf2f7',
+    overflow: 'hidden',
+  },
+  gNewDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e74c3c', marginRight: 6 },
+  gIconBox: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  gCardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
+  gTitleWrap: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 },
+  gTitle: { fontSize: 14, fontWeight: '800', flex: 1, marginRight: 8, color: '#1a1a2e' },
+  gMsg: { fontSize: 13, color: '#4a5568', lineHeight: 18, marginBottom: 6 },
+  gCardBottomRow: { flexDirection: 'row', alignItems: 'center' },
+  gAdminBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  gAdminSenderTxt: { fontSize: 11, fontWeight: '700', color: '#e74c3c' },
+  gDotSep: { marginHorizontal: 6, color: '#ccc', fontSize: 12 },
+  gTime: { fontSize: 11, color: '#a0aec0', fontWeight: '500' },
+  gCardActions: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  gActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
+  gMarkReadAction: { backgroundColor: '#fdecea', borderWidth: 1, borderColor: '#f5c6c0' },
+  gMarkReadActionTxt: { fontSize: 12, fontWeight: '700', color: '#e74c3c' },
+  gTag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+  gTagTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
+  gEmptyBox: { alignItems: 'center', paddingVertical: 36, paddingHorizontal: 20 },
+  gEmptyIconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0f4f8', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  gEmptyText: { textAlign: 'center', color: '#1a1a2e', fontSize: 15, fontWeight: '800' },
+  gEmptySub: { textAlign: 'center', color: '#718096', marginTop: 4, fontSize: 12, lineHeight: 17 },
 
   appHeader:    { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
   hdrInner:     { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 12, paddingBottom: 5 },
@@ -415,6 +485,8 @@ const styles = StyleSheet.create({
   cardRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 13 },
   cardDivider:     { height: 1, backgroundColor: '#f3f4f6', marginHorizontal: 16 },
   rowIcon:         { width: 44, height: 44, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
+  rowIconWrap:     { position: 'relative' },
+  iconDot:         { position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#e74c3c', borderWidth: 2.5, borderColor: '#fff' },
   rowText:         { flex: 1 },
   rowTitle:        { fontSize: 14, fontWeight: '800', color: '#1a1a2e' },
   rowSub:          { fontSize: 11, color: '#999', marginTop: 2 },
@@ -455,26 +527,4 @@ const styles = StyleSheet.create({
   promptDownloadBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
   promptSkipBtn:         { paddingVertical: 10 },
   promptSkipText:        { fontSize: 13, color: '#aaa', fontWeight: '600' },
-});
-
-const infoStyles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#f5f6f8' },
-  header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 14 },
-  headerLeft:     { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerIcon:     { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  headerTitle:    { fontSize: 17, fontWeight: '800', color: '#fff' },
-  headerSub:      { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 },
-  closeBtn:       { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.9)', justifyContent: 'center', alignItems: 'center' },
-  disclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fef9e7', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#fef0c0' },
-  disclaimerText: { flex: 1, fontSize: 11, color: '#856404', lineHeight: 16 },
-  section:        { marginBottom: 18 },
-  sectionHeader:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  sectionDot:     { width: 10, height: 10, borderRadius: 5 },
-  sectionTitle:   { fontSize: 14, fontWeight: '800', color: '#1a1a2e' },
-  sourceRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 6, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  sourceRowLeft:  { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  sourceTitle:    { fontSize: 13, color: '#333', fontWeight: '500', flex: 1 },
-  appInfo:        { backgroundColor: '#fff', borderRadius: 13, padding: 16, alignItems: 'center', marginTop: 10 },
-  appInfoTitle:   { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 4 },
-  appInfoText:    { fontSize: 11, color: '#888', marginTop: 2, textAlign: 'center' },
 });

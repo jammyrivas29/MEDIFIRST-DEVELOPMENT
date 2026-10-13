@@ -31,6 +31,21 @@ exports.deleteMyNotification = async (req, res) => {
   }
 };
 
+// GET /api/notifications/public  → active admin broadcasts (no login required, guests included)
+exports.getPublicNotifications = async (req, res) => {
+  try {
+    const list = await Notification.find({ isActive: true, recipient: null })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .maxTimeMS(8000);
+    res.json({ success: true, count: list.length, notifications: list });
+  } catch (e) {
+    // Never break the guest UI — an empty list beats a 500 on a slow/offline DB
+    console.error('getPublicNotifications error:', e.message);
+    res.json({ success: true, count: 0, notifications: [] });
+  }
+};
+
 // POST /api/admin/notifications  → admin creates (broadcast if no recipient)
 exports.createNotification = async (req, res) => {
   try {

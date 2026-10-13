@@ -14,11 +14,13 @@ import UserHomeScreen from '../screens/home/UserHomeScreen';
 import GuidesListScreen from '../screens/firstAid/GuidesListScreen';
 import GuideDetailEnhancedScreen from '../screens/firstAid/GuideDetailEnhancedScreen';
 import EmergencyScreen from '../screens/emergency/EmergencyScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+import ProfileStack from '../screens/profile/ProfileStack';
 import ChatbotScreen from '../screens/chatbot/ChatbotScreen';
 import HospitalLocatorScreen from '../screens/hospital/HospitalLocatorScreen';
 import VideoInstructionsScreen from '../screens/videos/VideoInstructionsScreen';
 import NotificationsScreen from '../screens/home/NotificationsScreen';
+import GuestAlertsScreen from '../screens/home/GuestAlertsScreen';
+import SourcesScreen from '../screens/home/SourcesScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -69,6 +71,16 @@ function GuestStack() {
       <Stack.Screen
         name="Hospital"
         component={HospitalLocatorScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GuestAlerts"
+        component={GuestAlertsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Sources"
+        component={SourcesScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
@@ -189,9 +201,16 @@ export default function TabNavigator() {
         component={VideoInstructionsScreen}
         options={{
           tabBarButton: () => null,
-          title: 'Video Instructions',
-          headerStyle: { backgroundColor: '#e74c3c' },
-          headerTintColor: '#fff',
+          headerShown: false,
+        }}
+      />
+      {/* Sources hidden from tab bar but navigable from home info icon */}
+      <Tab.Screen
+        name="Sources"
+        component={SourcesScreen}
+        options={{
+          tabBarButton: () => null,
+          headerShown: false,
         }}
       />
       {/* Alerts: user receives admin emergency alerts */}
@@ -208,7 +227,7 @@ export default function TabNavigator() {
       {/* Profile: far right end */}
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{
           headerShown: false,
           sceneContainerStyle: { marginTop: 0, paddingTop: 0 },
