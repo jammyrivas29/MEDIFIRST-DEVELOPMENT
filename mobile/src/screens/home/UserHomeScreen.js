@@ -78,7 +78,7 @@ export default function UserHomeScreen({ navigation }) {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const { latitude, longitude } = loc.coords;
       const mapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
-      const message  = `🚨 EMERGENCY! I need help!\nMy location: ${mapsLink}`;
+      const message  = `EMERGENCY! I need help!\nMy location: ${mapsLink}`;
       const smsUrl   = `sms:?body=${encodeURIComponent(message)}`;
       const canOpen  = await Linking.canOpenURL(smsUrl);
       if (canOpen) { await Linking.openURL(smsUrl); Alert.alert('Success', 'SMS app opened with your location!'); }

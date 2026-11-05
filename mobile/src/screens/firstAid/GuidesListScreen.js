@@ -107,7 +107,7 @@ export const CPR_MODES = {
     ],
   },
   child: {
-    label: 'Child', icon: 'body', color: '#e67e22', bg: '#fef5ec',
+    label: 'Child', icon: 'body', color: '#e74c3c', bg: '#fdecea',
     ageNote: 'Ages 1 – 7',
     details: ['Use 1 or 2 hands', 'Push 2 inches deep', '30 compressions : 2 breaths'],
     steps: [
@@ -123,7 +123,7 @@ export const CPR_MODES = {
     ],
   },
   baby: {
-    label: 'Baby / Infant', icon: 'happy', color: '#8e44ad', bg: '#f5eef8',
+    label: 'Baby / Infant', icon: 'happy', color: '#e74c3c', bg: '#fdecea',
     ageNote: 'Under 1 year old',
     details: ['Use 2 fingers only', 'Push 1.5 inches deep', '30 compressions : 2 breaths'],
     steps: [
@@ -306,6 +306,10 @@ export default function GuidesListScreen({ navigation, route }) {
 
   useEffect(() => {
     setSearchQuery('');
+    setSearchFocused(false); // reset search icon state when category changes
+    setAllGuides([]);       // clear stale guides instantly — prevents old category flash
+    setDisplayGuides([]);
+    setLoading(true);
     fetchGuides();
   }, [routeCategory]);
 
@@ -329,6 +333,8 @@ export default function GuidesListScreen({ navigation, route }) {
     setLoading(true);
     setNoInternet(false);
 
+    // 1. If user has downloaded guides, always use the bundled local guides
+    //    (their step images are require()'d assets → work fully offline).
     try {
       const downloaded = await AsyncStorage.getItem(GUIDES_DOWNLOAD_KEY);
       if (downloaded === 'true') {
@@ -338,6 +344,7 @@ export default function GuidesListScreen({ navigation, route }) {
       }
     } catch (_) {}
 
+    // 2. Check connectivity. If offline, use local guides immediately.
     const netState = await NetInfo.fetch();
     const isConnected = netState.isConnected && netState.isInternetReachable !== false;
 
@@ -348,6 +355,7 @@ export default function GuidesListScreen({ navigation, route }) {
       return;
     }
 
+    // 3. Online but not downloaded → try the API; fall back to local on any failure.
     try {
       const data = await getAllGuides(routeCategory ? { category: routeCategory } : {});
       if (data?.guides?.length > 0) {

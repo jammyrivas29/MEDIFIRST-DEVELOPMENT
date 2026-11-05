@@ -101,6 +101,59 @@ export default function MedicalScreen() {
             {saving ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="checkmark-circle" size={16} color="#fff" /><Text style={s.saveBtnTxt}>Save Medical Profile</Text></>}
           </TouchableOpacity>
         )}
+
+        <View style={s.tipsCard}>
+          <View style={s.tipsHeader}>
+            <View style={s.tipsHeaderIcon}>
+              <Ionicons name="bulb" size={18} color="#f39c12" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.tipsTitle}>Personalized Health Tips</Text>
+              <Text style={s.tipsSub}>Based on your medical profile</Text>
+            </View>
+          </View>
+
+          {allergyList.length > 0 && (
+            <View style={s.tipItem}>
+              <View style={s.tipDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.tipBold}>Allergies Alert:</Text>
+                <Text style={s.tipText}>You have {allergyList.length} recorded allerg{allergyList.length === 1 ? 'y' : 'ies'}. Always inform healthcare providers and check medicine labels.</Text>
+              </View>
+            </View>
+          )}
+
+          {condList.length > 0 && (
+            <View style={s.tipItem}>
+              <View style={s.tipDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.tipBold}>Medical Conditions:</Text>
+                <Text style={s.tipText}>Keep medications accessible and know your condition's emergency symptoms. Share this profile with emergency contacts.</Text>
+              </View>
+            </View>
+          )}
+
+          {bloodType && bloodType !== 'Unknown' && (
+            <View style={s.tipItem}>
+              <View style={s.tipDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.tipBold}>Blood Type {bloodType}:</Text>
+                <Text style={s.tipText}>In emergencies, medical staff will use your blood type for transfusions. Wear a medical alert ID.</Text>
+              </View>
+            </View>
+          )}
+
+          {allergyList.length === 0 && condList.length === 0 && (!bloodType || bloodType === 'Unknown') && (
+            <View style={s.tipItem}>
+              <View style={s.tipDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.tipBold}>Complete Your Profile:</Text>
+                <Text style={s.tipText}>Add your blood type, allergies, and medical conditions so we can give you personalized health advice.</Text>
+              </View>
+            </View>
+          )}
+        </View>
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
@@ -138,4 +191,13 @@ const s = StyleSheet.create({
   nilTxt:      { fontSize: 13, color: '#bbb', fontStyle: 'italic' },
   saveBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#e74c3c', borderRadius: 14, paddingVertical: 15, elevation: 3 },
   saveBtnTxt:  { fontSize: 15, fontWeight: '800', color: '#fff' },
+  tipsCard:    { backgroundColor: '#fff', borderRadius: 18, overflow: 'hidden', marginTop: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6 },
+  tipsHeader:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12, backgroundColor: '#fef9e7', borderBottomWidth: 1, borderBottomColor: '#fde9c2' },
+  tipsHeaderIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: '#fef5e7', justifyContent: 'center', alignItems: 'center' },
+  tipsTitle:   { fontSize: 16, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
+  tipsSub:     { fontSize: 11, color: '#f39c12', fontWeight: '600', letterSpacing: 0.3 },
+  tipItem:     { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingVertical: 14, gap: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+  tipDot:      { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f39c12', marginTop: 8 },
+  tipBold:     { fontSize: 14, fontWeight: '700', color: '#1a1a2e', marginBottom: 4 },
+  tipText:     { fontSize: 13, lineHeight: 18, color: '#555' },
 });

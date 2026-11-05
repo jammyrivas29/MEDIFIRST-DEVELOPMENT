@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getGuideById } from '../../api/firstAidApi';
+import { LOCAL_GUIDES } from './GuidesListScreen';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -81,8 +82,8 @@ const CPR_MODE_CONFIG = [
     label: 'Child',
     ageNote: 'Ages 1 – 7',
     icon: 'body',
-    color: '#e67e22',
-    bg: '#fef5ec',
+    color: '#e74c3c',
+    bg: '#fdecea',
     details: ['Use 1 or 2 hands', 'Push 2 inches deep', '30 compressions : 2 breaths'],
   },
   {
@@ -90,8 +91,8 @@ const CPR_MODE_CONFIG = [
     label: 'Baby / Infant',
     ageNote: 'Under 1 year old',
     icon: 'happy',
-    color: '#8e44ad',
-    bg: '#f5eef8',
+    color: '#e74c3c',
+    bg: '#fdecea',
     details: ['Use 2 fingers only', 'Push 1.5 inches deep', '30 compressions : 2 breaths'],
   },
 ];
@@ -219,7 +220,13 @@ export default function GuideDetailScreen({ navigation, route }) {
       const data = await getGuideById(guideId);
       if (data?.guide) setGuide(data.guide);
     } catch (_) {
-      // Fallback
+      // Offline or API failed → fall back to the matching bundled local guide
+      // (its step images are require()'d assets, so they work without internet).
+      const local = LOCAL_GUIDES.find(
+        g => g._id === guideId ||
+             g.title?.toLowerCase() === route.params?.title?.toLowerCase()
+      );
+      if (local) setGuide(local);
     } finally {
       setLoading(false);
     }

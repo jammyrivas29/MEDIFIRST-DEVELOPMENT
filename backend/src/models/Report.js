@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
   // 'feedback' = user-submitted feedback; 'incident' = usage/report entry
-  type:     { type: String, enum: ['feedback', 'incident', 'bug'], default: 'feedback' },
+  type:     { type: String, enum: ['feedback', 'incident', 'bug', 'concern'], default: 'feedback' },
   user:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   subject:  { type: String, trim: true },
   message:  { type: String, required: true, trim: true },

@@ -85,7 +85,7 @@ function VideoPlayer({ selectedVideo, onClose }) {
 
   const player = useVideoPlayer(selectedVideo.videoUrl, (p) => {
     p.loop = false;
-    p.timeUpdateEventInterval = 0.5;
+    p.timeUpdateEventInterval = 0.25;
     p.play();
   });
 
@@ -118,7 +118,8 @@ function VideoPlayer({ selectedVideo, onClose }) {
   const { currentTime: eventTime } = useEvent(player, 'timeUpdate', { currentTime: 0, bufferedPosition: 0 });
   useEffect(() => {
     if (eventTime !== undefined && eventTime >= 0) {
-      setCurrentTime(eventTime);
+      // Only re-render when the whole second changes → smoother, less jank
+      setCurrentTime((prev) => (Math.floor(prev) !== Math.floor(eventTime) ? eventTime : prev));
       if (player?.duration > 0 && duration === 0) setDuration(player.duration);
       if (player?.duration > 0 && eventTime >= player.duration - 0.5) {
         setIsEnded(true);
@@ -140,23 +141,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
     try { isPlaying ? player.pause() : player.play(); } catch (_) {}
     showControls();
   }, [player, isPlaying]);
-
-  // Fixed Skip / Rewind functionality for expo-video
-  const seekBy = useCallback((seconds) => {
-    if (!player) return;
-    try {
-      const maxTime = duration > 0 ? duration : (player.duration || 0);
-      const currentPos = player.currentTime || 0;
-      const nextTime = Math.max(0, Math.min(maxTime, currentPos + seconds));
-
-      // Direct assignment required by expo-video API
-      player.currentTime = nextTime;
-      setCurrentTime(nextTime);
-    } catch (err) {
-      console.warn('Seek error:', err);
-    }
-    showControls();
-  }, [player, duration, showControls]);
 
   // Fixed Scrub / Seek functionality for expo-video
   const seekTo = useCallback((time) => {
@@ -210,13 +194,8 @@ function VideoPlayer({ selectedVideo, onClose }) {
                 <Text style={vS.topTitle} numberOfLines={1}>{selectedVideo.title}</Text>
               </View>
 
-              {/* CENTER CONTROLS (-10s / PLAY / +10s) */}
+              {/* CENTER CONTROLS (play / pause only) */}
               <View style={vS.centerRow}>
-                <TouchableOpacity onPress={() => seekBy(-10)} style={vS.seekBtn} activeOpacity={0.75}>
-                  <Ionicons name="play-back-outline" size={24} color="#fff" />
-                  <Text style={vS.seekLabel}>-10s</Text>
-                </TouchableOpacity>
-
                 <TouchableOpacity
                   onPress={isEnded ? handleReplay : togglePlayPause}
                   style={vS.playBtn}
@@ -224,14 +203,9 @@ function VideoPlayer({ selectedVideo, onClose }) {
                 >
                   <Ionicons
                     name={isEnded ? 'refresh' : isPlaying ? 'pause' : 'play'}
-                    size={30}
-                    color="#fff"
+                    size={28}        // smaller icon size
+                    color="#fff"       // keep same color
                   />
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => seekBy(10)} style={vS.seekBtn} activeOpacity={0.75}>
-                  <Ionicons name="play-forward-outline" size={24} color="#fff" />
-                  <Text style={vS.seekLabel}>+10s</Text>
                 </TouchableOpacity>
               </View>
 
@@ -281,17 +255,6 @@ function VideoPlayer({ selectedVideo, onClose }) {
 
           <Text style={vS.descLabel}>About this video</Text>
           <Text style={vS.descText}>{selectedVideo.description}</Text>
-
-          <View style={vS.hintRow}>
-            <View style={vS.hintItem}>
-              <Ionicons name="play-back-outline" size={18} color="#e74c3c" />
-              <Text style={vS.hintText}>Tap -10s to rewind</Text>
-            </View>
-            <View style={vS.hintItem}>
-              <Ionicons name="play-forward-outline" size={18} color="#e74c3c" />
-              <Text style={vS.hintText}>Tap +10s to skip</Text>
-            </View>
-          </View>
         </View>
       </ScrollView>
     </View>
@@ -312,9 +275,7 @@ const vS = StyleSheet.create({
   topTitle:{ flex: 1, color: '#fff', fontSize: 14, fontWeight: '700' },
 
   centerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 28 },
-  seekBtn:   { alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', gap: 1 },
-  seekLabel: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  playBtn:   { width: 64, height: 64, borderRadius: 32, backgroundColor: '#e74c3c', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#e74c3c', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.5, shadowRadius: 8 },
+  playBtn:   { width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
 
   bottomBar:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
   timeText:     { color: '#fff', fontSize: 12, fontWeight: '600', minWidth: 36 },
@@ -331,11 +292,8 @@ const vS = StyleSheet.create({
   durationRow:{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
   durationText:{ fontSize: 13, color: '#aaa' },
   divider:    { height: 1, backgroundColor: '#f0f0f0', marginBottom: 14 },
-  descLabel:  { fontSize: 13, fontWeight: '700', color: '#555', marginBottom: 6 },
-  descText:   { fontSize: 14, color: '#333', lineHeight: 22 },
-  hintRow:    { flexDirection: 'row', gap: 16, marginTop: 16, padding: 14, backgroundColor: '#fdecea', borderRadius: 12 },
-  hintItem:   { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  hintText:   { fontSize: 12, color: '#e74c3c', fontWeight: '600' },
+  descLabel:   { fontSize: 12, fontWeight: '800', color: '#888', marginBottom: 6, letterSpacing: 0.5 },
+  descText:    { fontSize: 14, color: '#444', lineHeight: 21 },
 });
 
 // ── Main Screen ───────────────────────────────────────────────────────────────

@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, StyleSheet, KeyboardAvoidingView,
-  Platform, Animated, Modal, Alert, SafeAreaView, StatusBar,
+  Platform, Animated, SafeAreaView, StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LOCAL_GUIDES } from '../firstAid/GuidesListScreen';
+import { setChatActions } from './chatActions';
 
 const GROQ_API_KEY = '«redacted:gsk_…»';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
@@ -275,12 +276,8 @@ export default function ChatbotScreen({ navigation }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput]     = useState('');
   const [loading, setLoading] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [currentId, setCurrentId] = useState(null);
-  const [menuTargetId, setMenuTargetId] = useState(null);
-  const [renameTargetId, setRenameTargetId] = useState(null);
-  const [renameValue, setRenameValue] = useState('');
   const flatRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -291,6 +288,21 @@ export default function ChatbotScreen({ navigation }) {
       if (convos.length > 0) restoreConvo(convos[0]);
       else startNewChat();
     })();
+  }, []);
+
+  // Register menu/history actions so the Chat Menu & History screens can
+  // trigger them WITHOUT passing functions through navigation params.
+  useEffect(() => {
+    setChatActions({
+      onNewChat: () => startNewChat(),
+      onPickHistory: (id) => {
+        (async () => {
+          const convos = await loadHistory();
+          const found = convos.find((c) => c.id === id);
+          if (found) restoreConvo(found);
+        })();
+      },
+    });
   }, []);
 
   function startNewChat() {
@@ -347,90 +359,26 @@ export default function ChatbotScreen({ navigation }) {
     });
   };
 
-  function toggleMenu(id) {
-    setMenuTargetId((prev) => (prev === id ? null : id));
-  }
-
-  async function pinConversation(id) {
-    setMenuTargetId(null);
-    setConversations((prev) => {
-      const updated = prev.map((c) => c.id === id ? { ...c, pinned: !c.pinned } : c);
-      const sorted = updated.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updatedAt - a.updatedAt).slice(0, MAX_HISTORY);
-      saveHistory(sorted);
-      return sorted;
-    });
-  }
-
-  async function renameConversation(id) {
-    setMenuTargetId(null);
-    const convo = conversations.find((c) => c.id === id);
-    if (!convo) return;
-    setRenameTargetId(id);
-    setRenameValue(convo.title || '');
-  }
-
-  function submitRename() {
-    const id = renameTargetId;
-    const newTitle = (renameValue || '').trim();
-    if (!id || !newTitle) return;
-    setConversations((prev) => {
-          const updated = prev.map((c) => c.id === id ? { ...c, title: newTitle, titleLocked: true } : c);
-          saveHistory(updated);
-          return updated;
-        });
-    setRenameTargetId(null);
-    setRenameValue('');
-  }
-
-  function cancelRename() {
-    setRenameTargetId(null);
-    setRenameValue('');
-  }
-
-  async function deleteConversation(id) {
-    setMenuTargetId(null);
-    const target = conversations.find((c) => c.id === id);
-    const title = target?.title || 'this chat';
-    Alert.alert('Delete chat?', `This will delete "${title}".`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => {
-        setConversations((prev) => {
-          const updated = prev.filter((c) => c.id !== id);
-          saveHistory(updated);
-          if (updated.length === 0) {
-            startNewChat();
-          } else if (prev.find((c) => c.id === id)) {
-            const next = updated[0];
-            setCurrentId(next.id);
-            setMessages(next.messages && next.messages.length ? next.messages : [{ id: '0', text: "Hello! I'm MediFirst AI. Ask me about any first-aid topic.", isBot: true, time: now(), guides: [] }]);
-          }
-          return updated;
-        });
-      }},
-    ]);
-  }
-
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.select({ ios: 0, android: 56 })}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: '#e74c3c' }}>
         <View>
           {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight || 0 }} />}
           <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ChatMenu')}
+              style={styles.headerIconCircle}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="menu" size={22} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>MediFirst AI</Text>
             <TouchableOpacity onPress={() => {
               if (navigation.canGoBack()) navigation.goBack();
               else navigation.navigate('Home');
-            }} style={styles.iconBtn}>
-              <Ionicons name="chevron-back" size={22} color="#fff" />
+            }} style={styles.headerIconCircle} activeOpacity={0.85}>
+              <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>MediFirst AI</Text>
-            <View style={styles.headerRight}>
-              <TouchableOpacity onPress={() => setHistoryOpen(true)} style={styles.iconBtn}>
-                <Ionicons name="time-outline" size={22} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={startNewChat} style={styles.iconBtn}>
-                <Ionicons name="add" size={22} color="#fff" />
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -445,84 +393,6 @@ export default function ChatbotScreen({ navigation }) {
         <TextInput ref={inputRef} style={styles.input} value={input} onChangeText={setInput} placeholder="Ask about first aid…" placeholderTextColor="#888" onSubmitEditing={() => sendMessage()} returnKeyType="send" />
         <TouchableOpacity onPress={() => sendMessage()} style={[styles.sendBtn, !input.trim() && styles.sendBtnOff]} disabled={!input.trim() || loading}><Ionicons name="send" size={20} color="#fff" /></TouchableOpacity>
       </View>
-
-      <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
-        <View style={styles.sidebar}>
-          <View style={styles.sidebarHeader}><Text style={styles.sidebarTitle}>Chat History</Text><TouchableOpacity onPress={() => setHistoryOpen(false)} style={styles.iconBtnDark}><Ionicons name="close" size={22} color="#333" /></TouchableOpacity></View>
-          <FlatList data={conversations} keyExtractor={(c) => c.id} renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.sidebarItem, currentId === item.id && styles.sidebarItemActive]}
-              onPress={async () => { await restoreConvo(item); setHistoryOpen(false); }}
-            >
-              <View style={styles.sidebarItemLeft}>
-                <Ionicons name={item.pinned ? 'pin' : 'chatbubble-ellipses-outline'} size={18} color={item.pinned ? '#e74c3c' : '#888'} />
-                <View style={styles.sidebarItemTextWrap}>
-                  <Text style={styles.sidebarItemTitle} numberOfLines={1}>{item.title}</Text>
-                  <Text style={styles.sidebarItemTime}>{new Date(item.updatedAt).toLocaleString()}</Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={() => toggleMenu(item.id)} style={styles.iconBtnDark}>
-                <Ionicons name="ellipsis-vertical" size={20} color="#555" />
-              </TouchableOpacity>
-            </TouchableOpacity>
-          )} ListEmptyComponent={<Text style={styles.sidebarEmpty}>No past conversations yet.</Text>} />
-
-          {menuTargetId && (
-            <Modal visible={!!menuTargetId} animationType="slide" transparent onRequestClose={() => setMenuTargetId(null)}>
-              <TouchableOpacity style={styles.menuOverlay} onPress={() => setMenuTargetId(null)}>
-                <View style={styles.menuSheet}>
-                  {(() => {
-                    const item = conversations.find((c) => c.id === menuTargetId);
-                    if (!item) return null;
-                    return (
-                      <>
-                        <TouchableOpacity style={styles.menuSheetItem} onPress={() => pinConversation(item.id)}>
-                          <Ionicons name={item.pinned ? 'pin-outline' : 'pin'} size={20} color="#333" />
-                          <Text style={styles.menuSheetText}>{item.pinned ? 'Unpin' : 'Pin'}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuSheetItem} onPress={() => renameConversation(item.id)}>
-                          <Ionicons name="pencil-outline" size={20} color="#333" />
-                          <Text style={styles.menuSheetText}>Rename</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuSheetItem} onPress={() => deleteConversation(item.id)}>
-                          <Ionicons name="trash-outline" size={20} color="#c0392b" />
-                          <Text style={[styles.menuSheetText, { color: '#c0392b' }]}>Delete</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.menuSheetItem, styles.menuSheetCancel]} onPress={() => setMenuTargetId(null)}>
-                          <Text style={styles.menuSheetCancelText}>Cancel</Text>
-                        </TouchableOpacity>
-                      </>
-                    );
-                  })()}
-                </View>
-              </TouchableOpacity>
-            </Modal>
-          )}
-
-          {renameTargetId && (
-            <Modal visible={!!renameTargetId} animationType="fade" transparent onRequestClose={cancelRename}>
-              <TouchableOpacity style={styles.renameOverlay} onPress={cancelRename}>
-                <View style={styles.renameBox}>
-                  <Text style={styles.renameTitle}>Rename chat</Text>
-                  <TextInput
-                    style={styles.renameInput}
-                    value={renameValue}
-                    onChangeText={setRenameValue}
-                    placeholder="Chat name"
-                    placeholderTextColor="#999"
-                    autoFocus
-                    onSubmitEditing={submitRename}
-                  />
-                  <View style={styles.renameActions}>
-                    <TouchableOpacity onPress={cancelRename} style={styles.renameBtn}><Text style={styles.renameBtnText}>Cancel</Text></TouchableOpacity>
-                    <TouchableOpacity onPress={submitRename} style={[styles.renameBtn, styles.renameBtnPrimary]}><Text style={[styles.renameBtnText, styles.renameBtnPrimaryText]}>Save</Text></TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </Modal>
-          )}
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -530,8 +400,8 @@ export default function ChatbotScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center' },
+  headerIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   iconBtn: { padding: 6 },
   listContent: { padding: 16, paddingBottom: 8 },
   bubbleRow: { flexDirection: 'row', marginBottom: 14, alignItems: 'flex-end' },

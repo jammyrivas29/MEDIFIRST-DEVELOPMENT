@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logout, setAuthInitialRoute } from '../../store/authSlice';
 import { setUnread, loadSeenIds, loadDismissedIds, computeUnread, markAllSeen, markOneSeen } from '../../store/notifSlice';
-import { getPublicNotifications } from '../../api/adminApi';
+import { loadAlertsWithCache } from '../../api/alertsCache';
 
 const GUIDES_DOWNLOAD_KEY   = 'medifirst_guides_downloaded';
 const FIRST_LAUNCH_KEY      = 'medifirst_first_launch_done';
@@ -112,8 +112,7 @@ export default function GuestHomeScreen({ navigation }) {
 
   const loadAlerts = async () => {
     try {
-      const d = await getPublicNotifications();
-      const list = d.notifications || [];
+      const { list } = await loadAlertsWithCache();
       setAlerts(list);
       const [seen, dismissed] = await Promise.all([loadSeenIds(), loadDismissedIds()]);
       setSeenAlertIds(seen);
@@ -291,6 +290,12 @@ export default function GuestHomeScreen({ navigation }) {
             <View style={[styles.rowBadge, { backgroundColor: '#e8f4fb' }]}><Text style={styles.rowBadgeText}>FREE</Text></View>
           </TouchableOpacity>
           <View style={styles.cardDivider} />
+          <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Videos')} activeOpacity={0.82}>
+            <View style={[styles.rowIcon, { backgroundColor: '#16a085' }]}><Ionicons name="play-circle" size={20} color="#fff" /></View>
+            <View style={styles.rowText}><Text style={styles.rowTitle}>Video Instructions</Text><Text style={styles.rowSub}>Watch how-to first aid videos</Text></View>
+            <View style={[styles.rowBadge, { backgroundColor: '#eefaf8' }]}><Text style={[styles.rowBadgeText, { color: '#16a085' }]}>WATCH</Text></View>
+          </TouchableOpacity>
+          <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={openAlerts} activeOpacity={0.82}>
             <View style={styles.rowIconWrap}>
               <View style={[styles.rowIcon, { backgroundColor: '#e67e22' }]}><Ionicons name="notifications" size={20} color="#fff" /></View>
@@ -383,10 +388,10 @@ export default function GuestHomeScreen({ navigation }) {
           </View>
         </Animated.View>
 
-        <View style={styles.tip}>
-          <Ionicons name="information-circle" size={17} color="#f39c12" />
-          <Text style={styles.tipText}>In any emergency, <Text style={{ fontWeight: '700' }}>call 911 first</Text> before attempting first aid.</Text>
-        </View>
+        <View style={styles.tipCard}>
+          <View style={styles.tipHeader}><Ionicons name="bulb" size={16} color="#f39c12" /><Text style={styles.tipTitle}>Quick Tip</Text></View>
+          <Text style={styles.tipText}>In any emergency, always <Text style={{ fontWeight: '700', color: '#c0392b' }}>call 911 first</Text> before attempting first aid.</Text>
+          </View>
       </ScrollView>
     </View>
   );
@@ -510,8 +515,10 @@ const styles = StyleSheet.create({
   loginBtnText:      { fontSize: 14, color: '#888' },
   loginBtnHighlight: { fontSize: 14, fontWeight: '700', color: '#3498db' },
 
-  tip:     { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fffbf0', marginHorizontal: 16, marginTop: 16, marginBottom: 0, borderRadius: 12, padding: 14, gap: 10, borderLeftWidth: 4, borderLeftColor: '#f39c12' },
-  tipText: { flex: 1, fontSize: 12, color: '#7d6608', lineHeight: 18 },
+  tipCard:   { margin: 16, marginTop: 20, backgroundColor: '#fffbf0', borderRadius: 13, padding: 15, borderLeftWidth: 4, borderLeftColor: '#f39c12' },
+  tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 7 },
+  tipTitle:  { fontSize: 14, fontWeight: '700', color: '#856404' },
+  tipText:   { fontSize: 13, color: '#856404', lineHeight: 19 },
 
   promptOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   promptCard:    { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', alignItems: 'center', elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 },

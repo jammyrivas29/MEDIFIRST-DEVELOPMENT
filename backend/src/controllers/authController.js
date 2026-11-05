@@ -14,8 +14,30 @@ const generateToken = (user) => {
   );
 };
 
-// Helper: Send Email (Resend in prod/Railway, Ethereal in local dev)
+// Helper: Send Email
+// Priority: Gmail SMTP (works for any recipient) → Resend → Ethereal (local dev)
 const sendEmail = async ({ to, subject, html }) => {
+  // ── 1. Gmail SMTP — works for ANY recipient, no free-tier limits ──
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // Gmail App Password (16 chars, not your login password)
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"MediFirst" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log('✅ Email sent via Gmail SMTP to:', to);
+    return;
+  }
+
+  // ── 2. Resend (free tier: only delivers to your own account email) ──
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
@@ -28,7 +50,8 @@ const sendEmail = async ({ to, subject, html }) => {
     return;
   }
 
-  console.warn('⚠️ RESEND_API_KEY not set — using Ethereal (local dev only)');
+  // ── 3. Ethereal (local dev only — no real delivery) ──
+  console.warn('⚠️ No EMAIL_USER/EMAIL_PASS or RESEND_API_KEY set — using Ethereal (local dev only)');
   const testAccount = await nodemailer.createTestAccount();
   const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -216,55 +239,69 @@ exports.forgotPassword = async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
+    // 6-digit verification code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    user.resetCode = resetCode;
     await user.save({ validateBeforeSave: false });
 
     const resetUrl = `${process.env.BACKEND_URL}/api/auth/reset-password/${resetToken}`;
 
     await sendEmail({
       to: user.email,
-      subject: '🔑 MediFirst — Reset Your Password',
+      subject: 'MediFirst — Password Reset Code',
       html: `
-        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#f8f9fa;padding:24px;">
-          <div style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-            <div style="background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);padding:36px 32px;text-align:center;">
-              <div style="width:64px;height:64px;background:rgba(255,255,255,0.2);border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:64px;">🏥</div>
-              <h1 style="color:#fff;margin:0;font-size:26px;font-weight:800;letter-spacing:-0.5px;">MediFirst</h1>
-              <p style="color:rgba(255,255,255,0.75);margin:6px 0 0;font-size:13px;">First Aid & Emergency Assistance</p>
-            </div>
-            <div style="padding:36px 32px;">
-              <h2 style="color:#1a1a2e;margin:0 0 8px;font-size:22px;font-weight:800;">Reset Your Password</h2>
-              <p style="color:#888;margin:0 0 28px;font-size:14px;line-height:1.6;">
-                Hi <strong style="color:#1a1a2e;">${user.firstName}</strong>, we received a request to reset your password.
-                Click the button below to create a new one.
-              </p>
-              <div style="text-align:center;margin:0 0 28px;">
-                <a href="${resetUrl}"
-                  style="display:inline-block;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;
-                         text-decoration:none;padding:16px 40px;border-radius:12px;font-size:15px;
-                         font-weight:700;box-shadow:0 4px 16px rgba(231,76,60,0.4);">
-                  Reset My Password →
-                </a>
+        <div style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <div style="max-width:480px;margin:0 auto;padding:32px 16px;">
+
+            <!-- Card -->
+            <div style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+
+              <!-- Header -->
+              <div style="background:#e74c3c;padding:26px 28px;text-align:center;">
+                <h1 style="color:#ffffff;margin:0;font-size:20px;font-weight:800;letter-spacing:-0.3px;">Verify Your Identity</h1>
+                <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px;">Password reset verification code</p>
               </div>
-              <div style="background:#f8f9fa;border-radius:12px;padding:16px 20px;">
-                <p style="color:#999;font-size:12px;margin:0;line-height:1.7;">
-                  ⏰ <strong>Expires in 1 hour</strong><br>
-                  🔒 Didn't request this? You can safely ignore this email.
+
+              <!-- Body -->
+              <div style="padding:28px;">
+                <p style="color:#555;margin:0 0 6px;font-size:14px;">Hi <strong style="color:#1a1a2e;">${user.firstName}</strong>,</p>
+                <p style="color:#888;margin:0 0 22px;font-size:13px;line-height:1.6;">
+                  Use the code below to reset your MediFirst password. Enter it in the app to continue.
+                </p>
+
+                <!-- Verification code box -->
+                <div style="background:#fdecea;border-radius:14px;padding:24px 20px;text-align:center;">
+                  <div style="font-size:34px;font-weight:900;letter-spacing:10px;color:#e74c3c;line-height:1;">${resetCode}</div>
+                </div>
+
+                <p style="color:#999;font-size:12px;margin:18px 0 0;text-align:center;">
+                  This code expires in <strong style="color:#666;">1 hour</strong>.
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="border-top:1px solid #f0f0f0;padding:16px 28px;text-align:center;">
+                <p style="color:#bbb;font-size:11px;margin:0;">
+                  Didn't request this? You can safely ignore this email.
                 </p>
               </div>
             </div>
-            <div style="border-top:1px solid #f0f0f0;padding:16px 32px;text-align:center;">
-              <p style="color:#ccc;font-size:11px;margin:0;">MediFirst · First Aid & Emergency App</p>
-            </div>
+
+            <p style="color:#ccc;font-size:11px;text-align:center;margin:20px 0 0;">MediFirst · First Aid &amp; Emergency App</p>
           </div>
         </div>
       `,
+    }).catch((mailErr) => {
+      // Log but do NOT fail the request — code is still stored and can be verified.
+      console.error('❌ Reset code email failed to send:', mailErr?.message || mailErr);
     });
 
     return res.status(200).json({
       success: true,
-      message: 'If an account with that email exists, a reset link has been sent.',
+      message: 'If an account with that email exists, a reset code has been sent.',
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -419,6 +456,66 @@ exports.showResetPasswordPage = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/auth/reset-password/:token
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/verify-reset-code
+// Verify the 6-digit code sent to the user's email
+// ─────────────────────────────────────────────────────────────────────────────
+exports.verifyResetCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ success: false, message: 'Email and code are required.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.resetCode || !user.resetPasswordExpires || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired code. Please request a new one.' });
+    }
+
+    if (user.resetCode !== String(code).trim()) {
+      return res.status(400).json({ success: false, message: 'Incorrect code. Please check and try again.' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Code verified.' });
+  } catch (error) {
+    console.error('Verify reset code error:', error);
+    return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/reset-password-code
+// Set a new password after verifying the code
+// ─────────────────────────────────────────────────────────────────────────────
+exports.resetPasswordWithCode = async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+    if (!email || !code || !password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'All fields are required and password must be at least 6 characters.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.resetCode || !user.resetPasswordExpires || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired code. Please request a new one.' });
+    }
+
+    if (user.resetCode !== String(code).trim()) {
+      return res.status(400).json({ success: false, message: 'Incorrect code. Please check and try again.' });
+    }
+
+    user.password = password;
+    user.resetCode = undefined;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Password reset successfully. You can now sign in.' });
+  } catch (error) {
+    console.error('Reset password with code error:', error);
+    return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+  }
+};
+
 exports.resetPassword = async (req, res) => {
   try {
     const { password } = req.body;

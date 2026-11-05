@@ -36,7 +36,6 @@ export default function SettingsScreen() {
         <View style={s.menuCard}>
           {[
             { icon: 'person', bg: '#fdecea', color: '#e74c3c', title: 'Edit Account', sub: 'Update name, email and phone', onPress: () => setE(true), guest: false },
-            { icon: 'camera', bg: '#e8f4fb', color: '#2980b9', title: 'Change Profile Photo', sub: 'Take a photo or choose from gallery', onPress: pickPhoto, guest: false },
           ].filter(row => !isGuest || row.guest).map((row, i, arr) => (
             <React.Fragment key={row.title}>
               {i > 0 && <View style={s.menuDivider} />}

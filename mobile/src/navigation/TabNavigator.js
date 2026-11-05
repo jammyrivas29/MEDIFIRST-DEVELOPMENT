@@ -16,6 +16,8 @@ import GuideDetailEnhancedScreen from '../screens/firstAid/GuideDetailEnhancedSc
 import EmergencyScreen from '../screens/emergency/EmergencyScreen';
 import ProfileStack from '../screens/profile/ProfileStack';
 import ChatbotScreen from '../screens/chatbot/ChatbotScreen';
+import ChatHistoryScreen from '../screens/chatbot/ChatHistoryScreen';
+import ChatMenuScreen from '../screens/chatbot/ChatMenuScreen';
 import HospitalLocatorScreen from '../screens/hospital/HospitalLocatorScreen';
 import VideoInstructionsScreen from '../screens/videos/VideoInstructionsScreen';
 import NotificationsScreen from '../screens/home/NotificationsScreen';
@@ -83,19 +85,32 @@ function GuestStack() {
         component={SourcesScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Videos"
+        component={VideoInstructionsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChatHistory"
+        component={ChatHistoryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChatMenu"
+        component={ChatMenuScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
 
-// ── Main Tab Navigator ──
-export default function TabNavigator() {
-  const { isAuthenticated, isGuest } = useSelector((state) => state.auth);
+// ── Main Tab Navigator (inner, hidden from wrapper) ──
+function MainTabs() {
   const unreadAlerts = useSelector((state) => state.notif?.unread || 0);
   const dispatch = useDispatch();
 
   // Populate the navbar unread badge at launch (so +N shows without opening the tab first)
   useEffect(() => {
-    if (isGuest || !isAuthenticated) return;
     let active = true;
     (async () => {
       try {
@@ -107,11 +122,7 @@ export default function TabNavigator() {
       } catch { /* ignore */ }
     })();
     return () => { active = false; };
-  }, [isAuthenticated, isGuest, dispatch]);
-
-  if (isGuest || !isAuthenticated) {
-    return <GuestStack />;
-  }
+  }, [dispatch]);
 
   return (
     <Tab.Navigator
@@ -169,6 +180,17 @@ export default function TabNavigator() {
         name="Guides"
         component={GuidesStack}
         options={{ headerShown: false }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Navigate to GuidesList with NO category (show all guides)
+            navigation.navigate('Guides', {
+              screen: 'GuidesList',
+              params: { category: null }
+            });
+          },
+        })}
       />
       <Tab.Screen
         name="Hospital"
@@ -234,5 +256,22 @@ export default function TabNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+// ── Root: guest stack, or tabs wrapped with a stack for ChatHistory slide ──
+export default function TabNavigator() {
+  const { isAuthenticated, isGuest } = useSelector((state) => state.auth);
+
+  if (isGuest || !isAuthenticated) {
+    return <GuestStack />;
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f5f5f5' } }}>
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="ChatHistory" component={ChatHistoryScreen} />
+      <Stack.Screen name="ChatMenu" component={ChatMenuScreen} />
+    </Stack.Navigator>
   );
 }

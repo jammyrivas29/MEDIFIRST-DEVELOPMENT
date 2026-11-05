@@ -138,13 +138,7 @@ export default function NotificationsScreen() {
               <Ionicons name="shield-checkmark" size={12} color="#27ae60" />
               <Text style={s.adminPillTxt}>OFFICIAL ADMIN CHANNEL</Text>
             </View>
-            {items.length > 0 && (
-              <TouchableOpacity onPress={markSeen} style={s.markReadBtn} activeOpacity={0.7}>
-                <Ionicons name="checkmark-done" size={14} color="#e74c3c" />
-                <Text style={s.markReadTxt}>Mark read</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+            </View>
 
           {loading ? (
             <View style={s.centerLoader}>
@@ -195,17 +189,12 @@ export default function NotificationsScreen() {
                       <Text style={s.time}>{formatTime(n.createdAt)}</Text>
                     </View>
 
-                    {/* Action row: Mark read (if unread) */}
+                    {/* NEW badge (if unread) */}
                     <View style={s.cardActions}>
                       {isUnread && (
-                        <TouchableOpacity
-                          style={[s.actionBtn, s.markReadAction]}
-                          onPress={() => handleMarkRead(n._id)}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons name="checkmark-done" size={14} color="#e74c3c" />
-                          <Text style={s.markReadActionTxt}>Mark read</Text>
-                        </TouchableOpacity>
+                        <View style={s.newBadge}>
+                          <Text style={s.newBadgeTxt}>NEW</Text>
+                        </View>
                       )}
                     </View>
                   </View>
@@ -303,8 +292,8 @@ const s = StyleSheet.create({
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   adminPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eafaf1', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   adminPillTxt: { fontSize: 10, fontWeight: '800', color: '#27ae60', letterSpacing: 0.3 },
-  markReadBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 8 },
-  markReadTxt: { fontSize: 12, color: '#e74c3c', fontWeight: '700' },
+  newBadge: { backgroundColor: '#e74c3c', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  newBadgeTxt: { fontSize: 10, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
 
   // ══════ NOTIFICATION CARDS ══════
   notifCard: {

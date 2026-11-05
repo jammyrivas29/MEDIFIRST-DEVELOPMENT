@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { setUnread, loadSeenIds, loadDismissedIds, computeUnread, markAllSeen, markOneSeen } from '../../store/notifSlice';
-import { getPublicNotifications } from '../../api/adminApi';
+import { loadAlertsWithCache } from '../../api/alertsCache';
 
 // Same icon/color mapping as the logged-in NotificationsScreen so alerts read identically
 const ALERT_TYPE_META = {
@@ -37,8 +37,7 @@ export default function GuestAlertsScreen({ navigation }) {
 
   const loadAlerts = useCallback(async () => {
     try {
-      const d = await getPublicNotifications();
-      const list = Array.isArray(d) ? d : (d.notifications || []);
+      const { list } = await loadAlertsWithCache();
       setAlerts(list);
       const [seen, dismissed] = await Promise.all([loadSeenIds(), loadDismissedIds()]);
       setSeenAlertIds(seen);
@@ -120,12 +119,6 @@ export default function GuestAlertsScreen({ navigation }) {
             <Ionicons name="shield-checkmark" size={12} color="#27ae60" />
             <Text style={s.adminPillTxt}>OFFICIAL ADMIN CHANNEL</Text>
           </View>
-          {!loading && alerts.length > 0 && (
-            <TouchableOpacity onPress={markAlertsSeen} style={s.markReadBtn} activeOpacity={0.7}>
-              <Ionicons name="checkmark-done" size={14} color="#e74c3c" />
-              <Text style={s.markReadTxt}>Mark read</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -178,11 +171,10 @@ export default function GuestAlertsScreen({ navigation }) {
                       <Text style={s.time}>{formatAlertTime(n.createdAt)}</Text>
                     </View>
                     {isUnread && (
-                      <View style={s.cardActions}>
-                        <TouchableOpacity style={[s.actionBtn, s.markReadAction]} onPress={() => markOneAlertSeen(n._id)} activeOpacity={0.8}>
-                          <Ionicons name="checkmark-done" size={14} color="#e74c3c" />
-                          <Text style={s.markReadActionTxt}>Mark read</Text>
-                        </TouchableOpacity>
+                      <View style={s.actionRow}>
+                        <View style={s.newBadge}>
+                          <Text style={s.newBadgeTxt}>NEW</Text>
+                        </View>
                       </View>
                     )}
                   </View>
@@ -231,8 +223,8 @@ const s = StyleSheet.create({
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   adminPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eafaf1', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   adminPillTxt: { fontSize: 10, fontWeight: '800', color: '#27ae60', letterSpacing: 0.3 },
-  markReadBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 8 },
-  markReadTxt: { fontSize: 12, color: '#e74c3c', fontWeight: '700' },
+  newBadge: { backgroundColor: '#e74c3c', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  newBadgeTxt: { fontSize: 10, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
   notifCard: {
     flexDirection: 'row',
     backgroundColor: '#f8f9fa',

@@ -4,15 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import ModalHeader from './ModalHeader';
 
 export default function AboutModal({ visible, onClose }) {
+  // Match colors from UserHomeScreen QUICK_TOOLS and GuestHomeScreen
   const features = [
-    { icon: 'medical',       color: '#e74c3c', bg: '#fdecea', title: 'First Aid Guides',   desc: 'Step-by-step emergency protocols' },
-    { icon: 'chatbubbles',   color: '#16a085', bg: '#e8f8f5', title: 'AI Assistant',       desc: 'Instant first aid answers' },
-    { icon: 'location',      color: '#27ae60', bg: '#e9f7ef', title: 'Hospital Locator',   desc: 'Find nearby emergency care' },
-    { icon: 'call',          color: '#2980b9', bg: '#e8f4fb', title: 'Emergency Hotlines', desc: 'One-tap 911 and crisis lines' },
-    { icon: 'people',        color: '#8e44ad', bg: '#f5eef8', title: 'Emergency Contacts', desc: 'Save and call contacts fast' },
-    { icon: 'person-circle', color: '#d35400', bg: '#fef5ec', title: 'Medical Profile',    desc: 'Blood type, allergies and conditions' },
-    { icon: 'send',          color: '#c0392b', bg: '#fdecea', title: 'GPS Location Share', desc: 'SMS your location to contacts' },
-    { icon: 'play-circle',   color: '#f39c12', bg: '#fef9e7', title: 'Video Tutorials',    desc: 'Watch first aid demonstrations' },
+    { icon: 'medical',       title: 'First Aid Guides',   desc: 'Step-by-step emergency protocols', color: '#e74c3c', bg: '#fdecea' },
+    { icon: 'chatbubbles',   title: 'AI Assistant',       desc: 'Instant first aid answers',        color: '#16a085', bg: '#e8f8f5' },
+    { icon: 'location',      title: 'Hospital Locator',   desc: 'Find nearby emergency care',       color: '#27ae60', bg: '#e9f7ef' },
+    { icon: 'call',          title: 'Emergency Hotlines', desc: 'One-tap 911 and crisis lines',     color: '#e74c3c', bg: '#fdecea' },
+    { icon: 'people',        title: 'Emergency Contacts', desc: 'Save and call contacts fast',      color: '#2980b9', bg: '#e8f4fb' },
+    { icon: 'person-circle', title: 'Medical Profile',    desc: 'Blood type, allergies and conditions', color: '#8e44ad', bg: '#f5eef8' },
+    { icon: 'send',          title: 'GPS Location Share', desc: 'SMS your location to contacts',    color: '#27ae60', bg: '#e9f7ef' },
+    { icon: 'play-circle',   title: 'Video Tutorials',    desc: 'Watch first aid demonstrations',   color: '#16a085', bg: '#eefaf8' },
   ];
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>

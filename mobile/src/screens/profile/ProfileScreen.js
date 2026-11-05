@@ -8,7 +8,6 @@ const TABS = [
   { key: 'Medical',  label: 'Medical',   sub: 'Blood type, allergies & conditions', icon: 'medical', color: '#e74c3c', bg: '#fdecea' },
   { key: 'Contacts', label: 'Contacts',  sub: 'Your saved emergency contacts',      icon: 'people',  color: '#2980b9', bg: '#e8f4fb' },
   { key: 'History',  label: 'History',   sub: 'Your emergency call log',            icon: 'time',    color: '#8e44ad', bg: '#f5eef8' },
-  { key: 'Tips',     label: 'Tips',      sub: 'Personalized health advice',         icon: 'bulb',    color: '#f39c12', bg: '#fef9e7' },
   { key: 'Settings', label: 'Settings',  sub: 'Account, privacy & app info',        icon: 'cog',     color: '#16a085', bg: '#e8f8f5' },
 ];
 
@@ -36,13 +35,12 @@ function ProfileMenu() {
       <SafeAreaView style={s.header} edges={['top']}>
         {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight || 0 }} />}
         <View style={s.hdrContent}>
-          <TouchableOpacity onPress={pickPhoto} activeOpacity={0.85} style={s.avatarWrap}>
+          <View style={s.avatarWrap}>
             {profileImage
               ? <Image source={{ uri: profileImage }} style={s.avatarImg} />
               : <View style={s.avatarFallback}><Text style={s.avatarInitials}>{initials}</Text></View>
             }
-            <View style={s.cameraPin}><Ionicons name="camera" size={8} color="#fff" /></View>
-          </TouchableOpacity>
+          </View>
 
           <View style={s.hdrMeta}>
             <Text style={s.hdrName} numberOfLines={1}>{user?.firstName} {user?.lastName}</Text>
