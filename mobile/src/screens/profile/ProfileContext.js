@@ -62,6 +62,10 @@ export function ProfileProvider({ children }) {
   const PHOTO_KEY = `medifirst_profile_image_${userId}`;
 
   const fetchProfile = async () => {
+    if (isGuest) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get('/user/profile');
       setProfile(res.data.user);

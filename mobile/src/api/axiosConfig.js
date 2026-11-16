@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ✅ YOUR IP ADDRESS
-const API_BASE_URL = 'http://192.168.1.19:5000/api';
+// YOUR IP ADDRESS
+const API_BASE_URL = 'http://192.168.1.31:5000/api';
 
 // Custom API client using fetch (no axios needed!)
 const api = {

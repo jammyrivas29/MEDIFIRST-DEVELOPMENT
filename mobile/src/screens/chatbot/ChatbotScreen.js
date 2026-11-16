@@ -1,19 +1,24 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, StyleSheet, KeyboardAvoidingView,
   Platform, Animated, SafeAreaView, StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 import { LOCAL_GUIDES } from '../firstAid/GuidesListScreen';
 import { setChatActions } from './chatActions';
+import {
+  loadUserHistory,
+  saveUserHistory,
+  getLastActiveConvoId,
+  setLastActiveConvoId,
+  getUserChatKey,
+} from './chatStorage';
 
 const GROQ_API_KEY = '«redacted:gsk_…»';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL        = 'llama-3.3-70b-versatile';
-const HISTORY_KEY  = '@medifirst_chat_history_v1';
-const MAX_HISTORY  = 30;
 
 const QUICK_QUESTIONS = [
   'How to do CPR?',
@@ -209,13 +214,6 @@ async function askGroq(userQuestion) {
   return data?.choices?.[0]?.message?.content ?? 'Sorry, I could not generate a response.';
 }
 
-async function loadHistory() {
-  try { const raw = await AsyncStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; }
-  catch { return []; }
-}
-async function saveHistory(conversations) {
-  try { await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(conversations.slice(0, MAX_HISTORY))); } catch {}
-}
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 
 function MessageBubble({ item, onGuidePick }) {
@@ -273,6 +271,9 @@ function TypingIndicator() {
 }
 
 export default function ChatbotScreen({ navigation }) {
+  const { user, isGuest } = useSelector((state) => state.auth);
+  const userKey = getUserChatKey(user, isGuest);
+
   const [messages, setMessages] = useState([]);
   const [input, setInput]     = useState('');
   const [loading, setLoading] = useState(false);
@@ -281,14 +282,54 @@ export default function ChatbotScreen({ navigation }) {
   const flatRef = useRef(null);
   const inputRef = useRef(null);
 
+  const startNewChat = useCallback(() => {
+    const id = Date.now().toString();
+    setCurrentId(id);
+    setMessages([
+      {
+        id: '0',
+        text: "Hello! I'm MediFirst AI. Ask me about any first-aid topic — CPR, choking, burns, bleeding, and more.",
+        isBot: true,
+        time: now(),
+        guides: [],
+      },
+    ]);
+    setConversations((prev) => [
+      { id, title: 'New chat', messages: [], updatedAt: Date.now(), titleLocked: false },
+      ...prev.filter((c) => c.messages && c.messages.length > 0),
+    ]);
+    setLastActiveConvoId(user, isGuest, id);
+  }, [user, isGuest]);
+
+  const restoreConvo = useCallback(async (convo) => {
+    if (!convo) return;
+    setCurrentId(convo.id);
+    setMessages(
+      convo.messages && convo.messages.length
+        ? convo.messages
+        : [{ id: '0', text: "Hello! I'm MediFirst AI. Ask me about any first-aid topic.", isBot: true, time: now(), guides: [] }]
+    );
+    await setLastActiveConvoId(user, isGuest, convo.id);
+  }, [user, isGuest]);
+
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const convos = await loadHistory();
+      const convos = await loadUserHistory(user, isGuest);
+      if (cancelled) return;
       setConversations(convos);
-      if (convos.length > 0) restoreConvo(convos[0]);
-      else startNewChat();
+      const lastActiveId = await getLastActiveConvoId(user, isGuest);
+      const target = (lastActiveId && convos.find((c) => c.id === lastActiveId)) || (convos.length > 0 ? convos[0] : null);
+      if (target) {
+        await restoreConvo(target);
+      } else {
+        startNewChat();
+      }
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [userKey]);
 
   // Register menu/history actions so the Chat Menu & History screens can
   // trigger them WITHOUT passing functions through navigation params.
@@ -297,34 +338,30 @@ export default function ChatbotScreen({ navigation }) {
       onNewChat: () => startNewChat(),
       onPickHistory: (id) => {
         (async () => {
-          const convos = await loadHistory();
+          const convos = await loadUserHistory(user, isGuest);
           const found = convos.find((c) => c.id === id);
-          if (found) restoreConvo(found);
+          if (found) {
+            await restoreConvo(found);
+          }
         })();
       },
     });
-  }, []);
-
-  function startNewChat() {
-    const id = Date.now().toString();
-    setCurrentId(id);
-    setMessages([{ id: '0', text: "Hello! I'm MediFirst AI. Ask me about any first-aid topic — CPR, choking, burns, bleeding, and more.", isBot: true, time: now(), guides: [] }]);
-    setConversations((prev) => [{ id, title: 'New chat', messages: [], updatedAt: Date.now(), titleLocked: false }, ...prev]);
-  }
-
-  async function restoreConvo(convo) {
-    setCurrentId(convo.id);
-    setMessages(convo.messages && convo.messages.length ? convo.messages : [{ id: '0', text: "Hello! I'm MediFirst AI. Ask me about any first-aid topic.", isBot: true, time: now(), guides: [] }]);
-  }
+  }, [userKey, startNewChat, restoreConvo]);
 
   async function persist(msgs) {
     if (!currentId) return;
     const firstUser = msgs.find((m) => !m.isBot);
     const title = firstUser ? titleFromPrompt(firstUser.text) : 'New chat';
-    const updated = conversations.map((c) => c.id === currentId ? { ...c, title: c.titleLocked ? c.title : title, messages: msgs, updatedAt: Date.now() } : c);
-    const sorted = updated.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, MAX_HISTORY);
-    setConversations(sorted);
-    await saveHistory(sorted);
+    setConversations((prev) => {
+      const exists = prev.some((c) => c.id === currentId);
+      const updated = exists
+        ? prev.map((c) => (c.id === currentId ? { ...c, title: c.titleLocked ? c.title : title, messages: msgs, updatedAt: Date.now() } : c))
+        : [{ id: currentId, title, messages: msgs, updatedAt: Date.now(), titleLocked: false }, ...prev];
+      const sorted = [...updated].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updatedAt - a.updatedAt);
+      saveUserHistory(user, isGuest, sorted);
+      return sorted;
+    });
+    await setLastActiveConvoId(user, isGuest, currentId);
   }
 
   async function sendMessage(text) {
@@ -399,7 +436,7 @@ export default function ChatbotScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, paddingTop: 26, backgroundColor: '#e74c3c' },  
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center' },
   headerIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   iconBtn: { padding: 6 },

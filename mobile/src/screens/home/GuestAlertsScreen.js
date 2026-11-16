@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { setUnread, loadSeenIds, loadDismissedIds, computeUnread, markAllSeen, markOneSeen } from '../../store/notifSlice';
+import { setUnread, clearUnread, loadGuestSeenIds, loadDismissedIds, computeUnread, markGuestAllSeen, markGuestOneSeen } from '../../store/notifSlice';
 import { loadAlertsWithCache } from '../../api/alertsCache';
 
 // Same icon/color mapping as the logged-in NotificationsScreen so alerts read identically
@@ -39,10 +39,12 @@ export default function GuestAlertsScreen({ navigation }) {
     try {
       const { list } = await loadAlertsWithCache();
       setAlerts(list);
-      const [seen, dismissed] = await Promise.all([loadSeenIds(), loadDismissedIds()]);
+      const [seen, dismissed] = await Promise.all([loadGuestSeenIds(), loadDismissedIds()]);
       setSeenAlertIds(seen);
       const visible = list.filter((n) => !dismissed.includes(n._id));
-      dispatch(setUnread(computeUnread(visible, seen)));
+      const unread = computeUnread(visible, seen);
+      dispatch(setUnread(unread));
+      if (unread === 0) await markGuestAllSeen(visible);
     } catch (_) {
     } finally {
       setLoading(false);
@@ -62,16 +64,32 @@ export default function GuestAlertsScreen({ navigation }) {
     return base;
   }, [alerts, alertFilter]);
 
-  const markAlertsSeen = async () => {
+  const markAlertsSeen = useCallback(async () => {
     try {
-      await markAllSeen(alerts);
-      setSeenAlertIds(alerts.map(a => a._id));
-      dispatch(setUnread(0));
+      const list = alerts.length ? alerts : ((await loadAlertsWithCache()).list || []);
+      if (list && list.length > 0) {
+        await markGuestAllSeen(list);
+        setSeenAlertIds(list.map((a) => a._id));
+        dispatch(clearUnread());
+      }
     } catch (_) {}
-  };
+  }, [alerts, dispatch]);
+
+  useEffect(() => {
+    if (alerts.length > 0) {
+      const t = setTimeout(() => {
+        markAlertsSeen();
+      }, 600);
+      return () => {
+        clearTimeout(t);
+        markGuestAllSeen(alerts);
+        dispatch(clearUnread());
+      };
+    }
+  }, [markAlertsSeen, alerts, dispatch]);
 
   const markOneAlertSeen = async (id) => {
-    await markOneSeen(id);
+    await markGuestOneSeen(id);
     setSeenAlertIds(prev => [...new Set([...prev, id])]);
   };
 
@@ -114,12 +132,7 @@ export default function GuestAlertsScreen({ navigation }) {
 
       {/* ── White rounded card container ── */}
       <View style={s.cardContainer}>
-        <View style={s.listHeader}>
-          <View style={s.adminPill}>
-            <Ionicons name="shield-checkmark" size={12} color="#27ae60" />
-            <Text style={s.adminPillTxt}>OFFICIAL ADMIN CHANNEL</Text>
-          </View>
-        </View>
+
 
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           {loading ? (
@@ -196,7 +209,7 @@ const s = StyleSheet.create({
     backgroundColor: '#e74c3c',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    paddingTop: 55,
+    paddingTop: 67,
   },
   closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   welcomeRow:      { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
@@ -256,6 +269,6 @@ const s = StyleSheet.create({
   loadingBox: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 20 },
   loadingText: { color: '#888', fontSize: 13, marginTop: 12, fontWeight: '600' },
   emptyIconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0f4f8', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  emptyText: { textAlign: 'center', color: '#1a1a2e', fontSize: 15, fontWeight: '800' },
-  emptySub: { textAlign: 'center', color: '#718096', marginTop: 4, fontSize: 12, lineHeight: 17 },
+  emptyText:   { textAlign: 'center', color: '#1a1a2e', fontSize: 15, fontWeight: '800' },
+  emptySub:    { textAlign: 'center', color: '#718096', marginTop: 4, fontSize: 12, lineHeight: 17 },
 });

@@ -23,22 +23,49 @@ const CATEGORY_META = {
   burns:       { icon: 'flame',       color: '#f39c12', label: 'Burns'        },
   bleeding:    { icon: 'bandage',     color: '#c0392b', label: 'Bleeding'     },
   fractures:   { icon: 'body',        color: '#8e44ad', label: 'Fractures'    },
-  seizure:    { icon: 'pulse',       color: '#2980b9', label: 'Seizure'      },
+  seizure:     { icon: 'pulse',        color:'#2980b9',label: 'Seizure'      },
   stroke:      { icon: 'medkit',      color: '#d35400', label: 'Stroke'       },
   heatstroke:  { icon: 'thermometer', color: '#f39c12', label: 'Heat Stroke'  },
   poisoning:   { icon: 'skull',       color: '#27ae60', label: 'Poisoning'    },
 };
 
 const SOURCES = [
-  { category: '🫀 CPR & Cardiac Arrest', color: '#e74c3c', items: [{ title: 'WikiHow — How to Perform CPR on an Adult, Child, Baby', url: 'https://www.wikihow.com/Perform-CPR' }] },
-  { category: '😮‍💨 Choking', color: '#e67e22', items: [{ title: 'WikiHow — How to Help a Choking Victim', url: 'https://www.wikihow.com/Help-a-Choking-Victim' }] },
-  { category: '🔥 Burns & Wounds', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat a Burn', url: 'https://www.wikihow.com/Treat-a-Burn' }] },
-  { category: '🩹 Bleeding & Wounds', color: '#c0392b', items: [{ title: 'WikiHow — How to Stop a Cut from Bleeding', url: 'https://www.wikihow.com/Stop-Bleeding' }] },
-  { category: '🦴 Fractures & Broken Bones', color: '#8e44ad', items: [{ title: 'WikiHow — How to Treat a Broken Foot', url: 'https://www.wikihow.com/Treat-a-Foot-Fracture' }] },
-  { category: '⚡ Seizure', color: '#2980b9', items: [{ title: 'WikiHow — How to Help Someone Having a Seizure', url: 'https://www.wikihow.com/Stop-a-Seizure' }] },
-  { category: '🧠 Stroke', color: '#d35400', items: [{ title: 'WikiHow — How to Recognize a Stroke', url: 'https://www.wikihow.com/Identify-if-Someone-Had-a-Stroke' }] },
-  { category: '🌡️ Heat Stroke', color: '#f39c12', items: [{ title: 'WikiHow — How to Treat Heat Stroke', url: 'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/extreme-heat-safety/heat-check.html' }] },
-  { category: '☠️ Poisoning', color: '#27ae60', items: [{ title: 'WikiHow — How to Treat Poisoning', url: 'https://www.wikihow.com/Treat-Poisoning' }] },
+  {
+    category: 'CPR & Cardiac Arrest',
+    items: [{ title: 'WikiHow — How to Perform CPR on an Adult, Child, Baby', url: 'https://www.wikihow.com/Perform-CPR' }],
+  },
+  {
+    category: 'Choking',
+    items: [{ title: 'WikiHow — How to Help a Choking Victim', url: 'https://www.wikihow.com/Help-a-Choking-Victim' }],
+  },
+  {
+    category: 'Burns & Wounds',
+    items: [{ title: 'WikiHow — How to Treat a Burn', url: 'https://www.wikihow.com/Treat-a-Burn' }],
+  },
+  {
+    category: 'Bleeding & Wounds',
+    items: [{ title: 'WikiHow — How to Stop a Cut from Bleeding', url: 'https://www.wikihow.com/Stop-Bleeding' }],
+  },
+  {
+    category: 'Fractures & Broken Bones',
+    items: [{ title: 'WikiHow — How to Treat a Broken Foot', url: 'https://www.wikihow.com/Treat-a-Foot-Fracture' }],
+  },
+  {
+    category: 'Seizure',
+    items: [{ title: 'WikiHow — How to Help Someone Having a Seizure', url: 'https://www.wikihow.com/Stop-a-Seizure' }],
+  },
+  {
+    category: 'Stroke',
+    items: [{ title: 'WikiHow — How to Recognize a Stroke', url: 'https://www.wikihow.com/Identify-if-Someone-Had-a-Stroke' }],
+  },
+  {
+    category: 'Heat Stroke',
+    items: [{ title: 'WikiHow — How to Treat Heat Stroke', url: 'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/extreme-heat-safety/heat-check.html' }],
+  },
+  {
+    category: 'Poisoning',
+    items: [{ title: 'WikiHow — How to Treat Poisoning', url: 'https://www.wikihow.com/Treat-Poisoning' }],
+  },
 ];
 
 function InfoModal({ visible, onClose }) {
@@ -46,15 +73,12 @@ function InfoModal({ visible, onClose }) {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={infoStyles.container}>
         <View style={infoStyles.header}>
-          <View style={infoStyles.headerLeft}>
-            <View style={infoStyles.headerIcon}><Ionicons name="information-circle" size={22} color="#fff" /></View>
-            <View>
-              <Text style={infoStyles.headerTitle}>Sources & References</Text>
-              <Text style={infoStyles.headerSub}>First Aid Guides</Text>
-            </View>
+          <View>
+            <Text style={infoStyles.headerTitle}>Sources & References</Text>
+            <Text style={infoStyles.headerSub}>First Aid Guides</Text>
           </View>
-          <TouchableOpacity style={infoStyles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={20} color="#555" />
+          <TouchableOpacity style={infoStyles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+            <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
         <View style={infoStyles.disclaimer}>
@@ -65,16 +89,15 @@ function InfoModal({ visible, onClose }) {
           {SOURCES.map((section) => (
             <View key={section.category} style={infoStyles.section}>
               <View style={infoStyles.sectionHeader}>
-                <View style={[infoStyles.sectionDot, { backgroundColor: section.color }]} />
                 <Text style={infoStyles.sectionTitle}>{section.category}</Text>
               </View>
               {section.items.map((item, idx) => (
                 <TouchableOpacity key={idx} style={infoStyles.sourceRow} onPress={() => Linking.openURL(item.url)} activeOpacity={0.75}>
                   <View style={infoStyles.sourceRowLeft}>
-                    <Ionicons name="link" size={13} color={section.color} />
+                    <Ionicons name="link-outline" size={15} color="#888" />
                     <Text style={infoStyles.sourceTitle}>{item.title}</Text>
                   </View>
-                  <Ionicons name="open-outline" size={14} color="#ccc" />
+                  <Ionicons name="open-outline" size={14} color="#bbb" />
                 </TouchableOpacity>
               ))}
             </View>
@@ -143,7 +166,7 @@ const LOCAL_GUIDES = [
   {
     _id: 'local_cpr',
     title: 'CPR (Cardiopulmonary Resuscitation)',
-    description: 'CPR is a lifesaving technique useful in emergencies where someone\'s breathing or heartbeat has stopped. Select the correct method for the victim\'s age.',
+    description: 'CPR is a lifesaving technique useful in emergencies where someone\'s breathing or heartbeat has stopped.',
     category: 'cpr', severity: 'critical', isOfflineAvailable: true,
     hasCprModes: true, cprModes: CPR_MODES,
     warnings: ['Do not stop CPR unless emergency services take over', 'Compressions may break ribs — this is normal and acceptable', 'Do not give rescue breaths if untrained — hands-only CPR is acceptable'],
@@ -228,7 +251,7 @@ const LOCAL_GUIDES = [
   {
     _id: 'local_heatstroke',
     title: 'Heat Stroke — Emergency Response',
-    description: 'Heat stroke is a serious condition that occurs when the body overheats and cannot cool itself properly. Immediate action is required.',
+    description: 'Heat stroke is a serious condition that occurs when the body overheats and cannot cool itself properly.',
     category: 'heat_stroke', severity: 'high', isOfflineAvailable: true,
     steps: [
       { stepNumber: 1, title: 'Stay in the shade', description: 'Move the person to a shaded area and help them rest.', image: require('../../../assets/guides/heat_stroke/hs1.jpg') },
@@ -260,7 +283,7 @@ const LOCAL_GUIDES = [
   {
     _id: 'local_stroke',
     title: 'Stroke — Emergency Care',
-    description: 'A stroke occurs when blood flow to part of the brain is interrupted or reduced, preventing brain tissue from getting oxygen and nutrients. Immediate medical attention is crucial.',
+    description: 'A stroke occurs when blood flow to part of the brain is interrupted or reduced.',
     category: 'stroke', severity: 'critical', isOfflineAvailable: true,
     steps: [
       { stepNumber: 1, title: 'Understand the difference between a stroke and a mini-stroke', description: 'Mini-strokes, also called transient ischemic attacks, occur when your brain gets less blood than normal. They can last from a few minutes up to a day.', image: require('../../../assets/guides/stroke/stroke.jpg') },
@@ -276,7 +299,7 @@ const LOCAL_GUIDES = [
   {
     _id: 'local_poison',
     title: 'Poisoning — Emergency Care',
-    description: 'Poisoning is a medical emergency requiring immediate attention. Follow these steps to provide initial care.',
+    description: 'Poisoning is a medical emergency requiring immediate attention.',
     category: 'poisoning', severity: 'critical', isOfflineAvailable: true,
     steps: [
       { stepNumber: 1, title: 'Getting Immediate Help', description: 'If you suspect poisoning, call 911 or Poison Control (1-800-222-1222) immediately.', image: require('../../../assets/guides/poison/poison1.jpg') },
@@ -440,11 +463,7 @@ export default function GuidesListScreen({ navigation, route }) {
               <Text style={styles.hdrSub}>Step-by-step first aid instructions</Text>
             </View>
           </View>
-          {isGuest && (
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.hdrCloseBtn} activeOpacity={0.85}>
-              <Ionicons name="close" size={22} color="#fff" />
-            </TouchableOpacity>
-          )}
+
         </View>
         
         {/* Sub-Header Strip */}
@@ -535,7 +554,7 @@ const styles = StyleSheet.create({
 
   // Clean Header Styles
   appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 8, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
-  hdrInner:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 9 },
+  hdrInner:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 30, paddingBottom: 9 },
   hdrCloseBtn:   { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   hdrBrand:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrIconWrap:   { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
@@ -590,23 +609,115 @@ const styles = StyleSheet.create({
 });
 
 const infoStyles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#f5f6f8' },
-  header:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 14 },
-  headerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerIcon:    { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  headerTitle:   { fontSize: 17, fontWeight: '800', color: '#fff' },
-  headerSub:     { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 },
-  closeBtn:      { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.9)', justifyContent: 'center', alignItems: 'center' },
-  disclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fef9e7', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#fef0c0' },
-  disclaimerText: { flex: 1, fontSize: 11, color: '#856404', lineHeight: 16 },
-  section:       { marginBottom: 18 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  sectionDot:    { width: 10, height: 10, borderRadius: 5 },
-  sectionTitle:  { fontSize: 14, fontWeight: '800', color: '#1a1a2e' },
-  sourceRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 6, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  sourceRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  sourceTitle:   { fontSize: 13, color: '#333', fontWeight: '500', flex: 1 },
-  appInfo:      { backgroundColor: '#fff', borderRadius: 13, padding: 16, marginTop: 8, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f0' },
-  appInfoTitle: { fontSize: 15, fontWeight: '800', color: '#1a1a2e', marginBottom: 6 },
-  appInfoText:  { fontSize: 12, color: '#888', marginBottom: 3, textAlign: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f6f8',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  headerSub: {
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 1,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disclaimer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fef9e7',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fef0c0',
+  },
+  disclaimerText: {
+    flex: 1,
+    fontSize: 12.5,
+    color: '#856404',
+    lineHeight: 16,
+  },
+  section: {
+    marginBottom: 18,
+  },
+  sectionHeader: {
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#555',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  sourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#eef0f2',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sourceRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 8,
+  },
+  sourceTitle: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '500',
+    flex: 1,
+  },
+  appInfo: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  appInfoTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1a1a2e',
+    marginBottom: 4,
+  },
+  appInfoText: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 2,
+    textAlign: 'center',
+  },
 });

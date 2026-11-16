@@ -237,27 +237,7 @@ export default function HospitalLocatorScreen() {
           <Text style={styles.hdrStripText}>Showing hospitals within {SEARCH_RADIUS / 1000}km of your location</Text>
         </View>
       </SafeAreaView>
-
-      <View style={styles.statsRow}>
-        {[
-          { num: hospitals.length || '—',   label: 'Found',     icon: 'business',         color: '#27ae60' },
-          { num: `${SEARCH_RADIUS/1000}km`, label: 'Radius',    icon: 'radio-button-on',  color: '#2980b9' },
-          { num: 'Free',                    label: 'No Key',    icon: 'shield-checkmark', color: '#8e44ad' },
-          { num: 'Live',                    label: 'Real Data', icon: 'checkmark-done',   color: '#e74c3c' },
-        ].map((s, i, arr) => (
-          <React.Fragment key={s.label}>
-            <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: s.color + '18' }]}>
-                <Ionicons name={s.icon} size={13} color={s.color} />
-              </View>
-              <Text style={styles.statNum}>{s.num}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-            {i < arr.length - 1 && <View style={styles.statDivider} />}
-          </React.Fragment>
-        ))}
-      </View>
-
+      
       <TouchableOpacity style={styles.mapCta} onPress={openAllOnMap} activeOpacity={0.85}>
         <View style={styles.mapCtaIcon}><Ionicons name="map" size={22} color="#fff" /></View>
         <View style={styles.mapCtaBody}>
@@ -511,7 +491,7 @@ const styles = StyleSheet.create({
   loadingSubtitle: { fontSize: 13, color: '#888', marginTop: 6 },
 
   header:      { backgroundColor: '#27ae60', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6 },
-  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, gap: 10 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 30 },
   headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },

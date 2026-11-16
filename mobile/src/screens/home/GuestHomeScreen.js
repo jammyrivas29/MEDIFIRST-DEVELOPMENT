@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logout, setAuthInitialRoute } from '../../store/authSlice';
-import { setUnread, loadSeenIds, loadDismissedIds, computeUnread, markAllSeen, markOneSeen } from '../../store/notifSlice';
+import { setUnread, clearUnread, loadGuestSeenIds, loadDismissedIds, computeUnread, markGuestAllSeen, markGuestOneSeen } from '../../store/notifSlice';
 import { loadAlertsWithCache } from '../../api/alertsCache';
 
 const GUIDES_DOWNLOAD_KEY   = 'medifirst_guides_downloaded';
@@ -16,13 +16,6 @@ const FIRST_LAUNCH_KEY      = 'medifirst_first_launch_done';
 const SEEN_ALERTS_KEY       = 'medifirst_seen_alerts';
 const TOTAL_GUIDES          = 9;
 
-const LOCKED_FEATURES = [
-  { icon: 'chatbubbles', color: '#16a085', bg: '#e8f8f5', label: 'MediFirst AI',       sub: 'Smart AI first-aid assistant' },
-  { icon: 'people',      color: '#2980b9', bg: '#e8f4fb', label: 'Emergency Contacts', sub: 'Your saved emergency contacts' },
-  { icon: 'person',      color: '#8e44ad', bg: '#f5eef8', label: 'Medical Profile',    sub: 'Blood type, allergies & more' },
-  { icon: 'send',        color: '#e67e22', bg: '#fef5ec', label: 'Send Location SMS',  sub: 'GPS location to contacts' },
-  { icon: 'time',        color: '#c0392b', bg: '#fdecea', label: 'Call History',       sub: 'Your emergency call log' },
-];
 
 const MEMBER_PERKS = [
   { icon: 'people',   color: '#2980b9', bg: '#e8f4fb', label: 'Emergency\nContacts' },
@@ -114,7 +107,7 @@ export default function GuestHomeScreen({ navigation }) {
     try {
       const { list } = await loadAlertsWithCache();
       setAlerts(list);
-      const [seen, dismissed] = await Promise.all([loadSeenIds(), loadDismissedIds()]);
+      const [seen, dismissed] = await Promise.all([loadGuestSeenIds(), loadDismissedIds()]);
       setSeenAlertIds(seen);
       const visible = list.filter((n) => !dismissed.includes(n._id));
       dispatch(setUnread(computeUnread(visible, seen)));
@@ -122,6 +115,7 @@ export default function GuestHomeScreen({ navigation }) {
   };
 
   const openAlerts = () => {
+    dispatch(clearUnread());
     navigation.navigate('GuestAlerts');
   };
 
@@ -185,13 +179,6 @@ export default function GuestHomeScreen({ navigation }) {
     dispatch(logout());
   };
   const handleLogIn  = () => { dispatch(setAuthInitialRoute('Login')); dispatch(logout()); };
-  const handleLockedFeature = () => {
-    Alert.alert(' Sign In Required', 'Create a free account or log in to access this feature.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign In',  onPress: handleLogIn },
-      { text: 'Register', onPress: handleSignUp },
-    ]);
-  };
 
   return (
     <View style={styles.container}>
@@ -202,7 +189,7 @@ export default function GuestHomeScreen({ navigation }) {
         <View style={styles.promptOverlay}>
           <View style={styles.promptCard}>
             <View style={styles.promptIconWrap}>
-              <Ionicons name="download" size={32} color="#fff" />
+              <Text style={styles.promptIcon}>↓</Text>
             </View>
             <Text style={styles.promptTitle}>Save Guides for Offline Use</Text>
             <Text style={styles.promptDesc}>
@@ -210,18 +197,12 @@ export default function GuestHomeScreen({ navigation }) {
             </Text>
             <View style={styles.promptChips}>
               {GUIDE_PREVIEWS.map(g => (
-                <View key={g.id} style={[styles.promptChip, { backgroundColor: g.color + '15', borderColor: g.color + '40' }]}>
-                  <Ionicons name={g.icon} size={11} color={g.color} />
-                  <Text style={[styles.promptChipText, { color: g.color }]}>{g.label}</Text>
+                <View key={g.id} style={[styles.promptChip, { borderColor: '#e74c3c40' }]}>
+                  <Text style={[styles.promptChipText, { color: '#e74c3c' }]}>{g.label}</Text>
                 </View>
               ))}
             </View>
-            <View style={styles.promptInfoRow}>
-              <Ionicons name="checkmark-circle" size={14} color="#27ae60" />
-              <Text style={styles.promptInfoText}>Free · No account needed · Works offline</Text>
-            </View>
             <TouchableOpacity style={styles.promptDownloadBtn} onPress={() => handleDownload(true)} activeOpacity={0.85}>
-              <Ionicons name="download" size={18} color="#fff" />
               <Text style={styles.promptDownloadBtnText}>Download Now</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.promptSkipBtn} onPress={dismissPrompt} activeOpacity={0.7}>
@@ -258,19 +239,19 @@ export default function GuestHomeScreen({ navigation }) {
           </View>
           <View style={styles.hdrStrip}>
             <Ionicons name="shield-checkmark" size={13} color="rgba(255,255,255,0.85)" />
-            <Text style={styles.hdrStripText}>Welcome! Explore free tools below.</Text>
+            <Text style={styles.hdrStripText}>Welcome! Explore Tools below.</Text>
           </View>
         </SafeAreaView>
 
         {/* Emergency */}
         <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 16, marginTop: 20, marginBottom: 4 }}>
-          <Text style={styles.sectionLabel}>Emergency</Text>
+          <Text style={styles.sectionLabel}>EMERGENCY</Text>
           <Text style={styles.sectionTitle}>Quick Access</Text>
         </Animated.View>
         <Animated.View style={[styles.unifiedCard, { opacity: fadeAnim }]}>
           <View style={styles.cardHeaderStrip}>
             <Ionicons name="warning" size={14} color="#e74c3c" />
-            <Text style={styles.cardHeaderText}>Always available — no sign-in needed</Text>
+            <Text style={styles.cardHeaderText}>Available Tools</Text>
           </View>
           <TouchableOpacity style={styles.cardRow} onPress={handleCall911} activeOpacity={0.82}>
             <View style={[styles.rowIcon, { backgroundColor: '#e74c3c' }]}><Ionicons name="call" size={20} color="#fff" /></View>
@@ -281,86 +262,71 @@ export default function GuestHomeScreen({ navigation }) {
           <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Hospital')} activeOpacity={0.82}>
             <View style={[styles.rowIcon, { backgroundColor: '#27ae60' }]}><Ionicons name="location" size={20} color="#fff" /></View>
             <View style={styles.rowText}><Text style={styles.rowTitle}>Nearby Hospitals</Text><Text style={styles.rowSub}>Find emergency care near you</Text></View>
-            <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}><Text style={[styles.rowBadgeText, { color: '#27ae60' }]}>FREE</Text></View>
+            <Ionicons name="chevron-forward" size={18} color="#ccc" />
           </TouchableOpacity>
           <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Guides')} activeOpacity={0.82}>
-            <View style={[styles.rowIcon, { backgroundColor: '#2980b9' }]}><Ionicons name="medical" size={20} color="#fff" /></View>
+            <View style={[styles.rowIcon, { backgroundColor: '#2980b9' }]}><Ionicons name="book" size={20} color="#fff" /></View>
             <View style={styles.rowText}><Text style={styles.rowTitle}>First Aid Guides</Text><Text style={styles.rowSub}>CPR, burns, choking & more — offline</Text></View>
-            <View style={[styles.rowBadge, { backgroundColor: '#e8f4fb' }]}><Text style={styles.rowBadgeText}>FREE</Text></View>
+            <Ionicons name="chevron-forward" size={18} color="#ccc" />
           </TouchableOpacity>
           <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={() => navigation.navigate('Videos')} activeOpacity={0.82}>
             <View style={[styles.rowIcon, { backgroundColor: '#16a085' }]}><Ionicons name="play-circle" size={20} color="#fff" /></View>
             <View style={styles.rowText}><Text style={styles.rowTitle}>Video Instructions</Text><Text style={styles.rowSub}>Watch how-to first aid videos</Text></View>
-            <View style={[styles.rowBadge, { backgroundColor: '#eefaf8' }]}><Text style={[styles.rowBadgeText, { color: '#16a085' }]}>WATCH</Text></View>
+            <Ionicons name="chevron-forward" size={18} color="#ccc" />
           </TouchableOpacity>
           <View style={styles.cardDivider} />
           <TouchableOpacity style={styles.cardRow} onPress={openAlerts} activeOpacity={0.82}>
             <View style={styles.rowIconWrap}>
               <View style={[styles.rowIcon, { backgroundColor: '#e67e22' }]}><Ionicons name="notifications" size={20} color="#fff" /></View>
-              {alerts.length > 0 && <View style={styles.iconDot} />}
+              {unreadAlerts > 0 && <View style={styles.iconDot} />}
             </View>
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>Alerts</Text>
-              <Text style={styles.rowSub}>Emergency alerts &amp; announcements</Text>
+              <Text style={styles.rowSub}>Emergency alerts & announcements</Text>
             </View>
-            {alerts.length > 0
-              ? <View style={[styles.rowBadge, { backgroundColor: '#fdf0e5' }]}><Text style={[styles.rowBadgeText, { color: '#e67e22' }]}>+{alerts.length}</Text></View>
-              : <View style={[styles.rowBadge, { backgroundColor: '#f5f6f8' }]}><Text style={[styles.rowBadgeText, { color: '#999' }]}>NONE</Text></View>
-            }
+            {unreadAlerts > 0 && (
+              <View style={[styles.rowBadge, { backgroundColor: '#fdf0e5' }]}>
+                <Text style={[styles.rowBadgeText, { color: '#e67e22' }]}>+{unreadAlerts}</Text>
+              </View>
+            )}
+            <Ionicons name="chevron-forward" size={18} color="#ccc" />
           </TouchableOpacity>
           <View style={styles.cardDivider} />
-          <TouchableOpacity style={styles.cardRow} onPress={() => handleDownload(false)} activeOpacity={0.82} disabled={downloading}>
-            <View style={[styles.rowIcon, { backgroundColor: isDownloaded ? '#27ae60' : '#8e44ad' }]}>
+          {/* ══ DOWNLOAD GUIDES ══ */}
+          <TouchableOpacity style={styles.cardRow} onPress={() => handleDownload(false)} disabled={downloading} activeOpacity={0.82}>
+            <View style={[styles.rowIcon, { backgroundColor: isDownloaded ? '#27ae60' : '#e74c3c' }]}>
               {downloading
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Ionicons name={isDownloaded ? 'checkmark-circle' : 'download'} size={20} color="#fff" />
-              }
+                : <Ionicons name={isDownloaded ? 'checkmark-circle' : 'download'} size={20} color="#fff" />}
             </View>
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>
                 {downloading ? `Saving guides… ${downloadProgress}/${TOTAL_GUIDES}` : isDownloaded ? 'Guides Downloaded' : 'Download Guides'}
               </Text>
               {downloading ? (
-                <View style={styles.progressBarWrap}>
-                  <View style={[styles.progressBarFill, { width: `${(downloadProgress / TOTAL_GUIDES) * 100}%` }]} />
+                <View style={[styles.downloadProgressWrap, { backgroundColor: isDownloaded ? '#e9f7ef' : '#fdecea' }]}>
+                  <View style={[styles.downloadProgressFill, { width: `${(downloadProgress / TOTAL_GUIDES) * 100}%`, backgroundColor: isDownloaded ? '#27ae60' : '#e74c3c' }]} />
                 </View>
               ) : (
                 <Text style={styles.rowSub}>
-                  {isDownloaded ? `${TOTAL_GUIDES} guides saved — works without internet` : `Save all ${TOTAL_GUIDES} guides for offline use — no account needed`}
+                  {isDownloaded ? `${TOTAL_GUIDES} guides saved — works offline` : `Save all ${TOTAL_GUIDES} guides for offline use`}
                 </Text>
               )}
             </View>
             {!downloading && (
-              isDownloaded
-                ? <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}><Text style={[styles.rowBadgeText, { color: '#27ae60' }]}>SAVED</Text></View>
-                : <View style={[styles.rowBadge, { backgroundColor: '#f5eef8' }]}><Text style={[styles.rowBadgeText, { color: '#8e44ad' }]}>FREE</Text></View>
+              isDownloaded ? (
+                <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}>
+                  <Text style={[styles.rowBadgeText, { color: '#27ae60' }]}>SAVED</Text>
+                </View>
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color="#ccc" />
+              )
             )}
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Members Only */}
-        <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 16, marginTop: 24, marginBottom: 12 }}>
-          <Text style={styles.sectionLabel}>MEMBERS ONLY</Text>
-          <Text style={styles.sectionTitle}>Sign In to Unlock</Text>
-        </Animated.View>
-        <Animated.View style={[styles.unifiedCard, { opacity: fadeAnim }]}>
-          <View style={styles.lockBanner}>
-            <Ionicons name="lock-closed" size={13} color="#856404" />
-            <Text style={styles.lockBannerText}>These features require a free account</Text>
-          </View>
-          {LOCKED_FEATURES.map((f, idx) => (
-            <React.Fragment key={f.label}>
-              <TouchableOpacity style={[styles.cardRow, { opacity: 0.7 }]} onPress={handleLockedFeature} activeOpacity={0.75}>
-                <View style={[styles.rowIcon, { backgroundColor: f.bg }]}><Ionicons name={f.icon} size={20} color={f.color} /></View>
-                <View style={styles.rowText}><Text style={[styles.rowTitle, { color: '#666' }]}>{f.label}</Text><Text style={styles.rowSub}>{f.sub}</Text></View>
-                <Ionicons name="lock-closed" size={15} color="#ddd" />
-              </TouchableOpacity>
-              {idx < LOCKED_FEATURES.length - 1 && <View style={styles.cardDivider} />}
-            </React.Fragment>
-          ))}
-        </Animated.View>
 
         {/* Sign up promo */}
         <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 16, marginTop: 24, marginBottom: 14 }}>
@@ -469,7 +435,7 @@ const styles = StyleSheet.create({
   gEmptySub: { textAlign: 'center', color: '#718096', marginTop: 4, fontSize: 12, lineHeight: 17 },
 
   appHeader:    { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 },
-  hdrInner:     { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 12, paddingBottom: 5 },
+  hdrInner:     { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 30, paddingBottom: 5 },
   hdrBrand:     { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap:  { position: 'relative' },
   hdrLogoImg:   { width: 48, height: 48 },
@@ -481,7 +447,7 @@ const styles = StyleSheet.create({
   hdrStrip:     { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.12)', paddingHorizontal: 16, paddingVertical: 8 },
   hdrStripText: { fontSize: 13, color: 'rgba(255,255,255,0.88)', fontWeight: '500', flex: 1 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#c0392b', letterSpacing: 1.5, marginBottom: 4 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#c0392b', letterSpacing: 1.5, marginBottom: 6 },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1a1a2e' },
 
   unifiedCard:     { marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 18, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, borderWidth: 1, borderColor: '#f0f0f0' },
@@ -498,11 +464,9 @@ const styles = StyleSheet.create({
   rowBadge:        { borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
   rowBadgeText:    { fontSize: 11, fontWeight: '800', color: '#555', letterSpacing: 0.4 },
 
-  progressBarWrap: { height: 4, backgroundColor: '#f0e6fc', borderRadius: 4, marginTop: 6, overflow: 'hidden' },
-  progressBarFill: { height: 4, backgroundColor: '#8e44ad', borderRadius: 4 },
+  downloadProgressWrap: { height: 6, borderRadius: 4, marginTop: 6, overflow: 'hidden' },
+  downloadProgressFill: { height: 6, borderRadius: 4 },
 
-  lockBanner:     { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#fef9e7', paddingHorizontal: 16, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#fef0c0' },
-  lockBannerText: { fontSize: 11, color: '#856404', fontWeight: '700' },
 
   perkGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', marginBottom: 18 },
   perkCard:    { width: '30%', backgroundColor: '#fff', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 8, alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 5 },
@@ -522,7 +486,8 @@ const styles = StyleSheet.create({
 
   promptOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   promptCard:    { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', alignItems: 'center', elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 },
-  promptIconWrap:  { width: 68, height: 68, borderRadius: 20, backgroundColor: '#8e44ad', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  promptIconWrap:  { width: 68, height: 68, borderRadius: 20, backgroundColor: '#fdecea', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  promptIcon:      { fontSize: 34, color: '#e74c3c' },
   promptTitle:     { fontSize: 20, fontWeight: '900', color: '#1a1a2e', textAlign: 'center', marginBottom: 10 },
   promptDesc:      { fontSize: 13, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 16 },
   promptChips:     { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7, marginBottom: 14 },
@@ -530,7 +495,7 @@ const styles = StyleSheet.create({
   promptChipText:  { fontSize: 11, fontWeight: '700' },
   promptInfoRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20 },
   promptInfoText:  { fontSize: 12, color: '#27ae60', fontWeight: '600' },
-  promptDownloadBtn:     { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#8e44ad', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 28, marginBottom: 10, width: '100%', justifyContent: 'center', elevation: 4 },
+  promptDownloadBtn:     { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#e74c3c', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 28, marginBottom: 10, width: '100%', justifyContent: 'center', elevation: 4 },
   promptDownloadBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
   promptSkipBtn:         { paddingVertical: 10 },
   promptSkipText:        { fontSize: 13, color: '#aaa', fontWeight: '600' },

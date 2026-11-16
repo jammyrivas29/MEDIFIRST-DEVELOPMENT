@@ -107,9 +107,6 @@ export default function UserHomeScreen({ navigation }) {
               </View>
             </View>
             <View style={styles.hdrActions}>
-              <TouchableOpacity style={styles.hdrIconBtn} onPress={handleLogout} activeOpacity={0.85}>
-                <Ionicons name="log-out-outline" size={20} color="#fff" />
-              </TouchableOpacity>
               <TouchableOpacity style={styles.hdrIconBtn} onPress={() => navigation.navigate('Sources')} activeOpacity={0.85}>
                 <Ionicons name="information-circle-outline" size={20} color="#fff" />
               </TouchableOpacity>
@@ -121,18 +118,8 @@ export default function UserHomeScreen({ navigation }) {
           </View>
         </SafeAreaView>
 
-        <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>QUICK ACCESS</Text><Text style={styles.sectionTitle}>Your Tools</Text></View>
-        <View style={styles.toolsGrid}>
-          {QUICK_TOOLS.map((tool) => (
-            <TouchableOpacity key={tool.title} style={styles.toolCard} onPress={() => handleToolPress(tool.action)} activeOpacity={0.8}>
-              <View style={[styles.toolIcon, { backgroundColor: tool.bg }]}><Ionicons name={tool.icon} size={22} color={tool.color} /></View>
-              <Text style={styles.toolTitle}>{tool.title}</Text>
-              <Text style={styles.toolSub}>{tool.sub}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>EMERGENCY</Text><Text style={styles.sectionTitle}>Quick Response</Text></View>
+        <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>EMERGENCY</Text>
+        <Text style={styles.sectionTitle}>Quick Response</Text></View>
         <View style={styles.emergencyCard}>
           <View style={styles.emergencyCardHeader}><Ionicons name="warning" size={15} color="#e74c3c" /><Text style={styles.emergencyCardHeaderText}>Tap below in case of emergency</Text></View>
           <TouchableOpacity style={styles.emergencyRow} onPress={handleCall911} activeOpacity={0.82}>
@@ -146,6 +133,17 @@ export default function UserHomeScreen({ navigation }) {
             <View style={styles.emergencyRowText}><Text style={styles.emergencyRowTitle}>{locating ? 'Locating…' : 'Send My Location'}</Text><Text style={styles.emergencyRowSub}>SMS your GPS to emergency contact</Text></View>
             <View style={[styles.emergencyBadge, { backgroundColor: '#e9f7ef' }]}><Text style={styles.emergencyBadgeText}>SMS</Text></View>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>QUICK ACCESS</Text><Text style={styles.sectionTitle}>Your Tools</Text></View>
+        <View style={styles.toolsGrid}>
+          {QUICK_TOOLS.map((tool) => (
+            <TouchableOpacity key={tool.title} style={styles.toolCard} onPress={() => handleToolPress(tool.action)} activeOpacity={0.8}>
+              <View style={[styles.toolIcon, { backgroundColor: tool.bg }]}><Ionicons name={tool.icon} size={22} color={tool.color} /></View>
+              <Text style={styles.toolTitle}>{tool.title}</Text>
+              <Text style={styles.toolSub}>{tool.sub}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>FIRST AID GUIDES</Text><Text style={styles.sectionTitle}>Choose a Topic</Text></View>
@@ -169,12 +167,10 @@ export default function UserHomeScreen({ navigation }) {
             </View>
           ))}
         </ScrollView>
-
         <View style={styles.tipCard}>
           <View style={styles.tipHeader}><Ionicons name="bulb" size={16} color="#f39c12" /><Text style={styles.tipTitle}>Quick Tip</Text></View>
           <Text style={styles.tipText}>In any emergency, always <Text style={{ fontWeight: '700', color: '#c0392b' }}>call 911 first</Text> before attempting first aid.</Text>
         </View>
-
       </ScrollView>
 
       {/* ══ FLOATING CHAT BUBBLE ══ */}
@@ -190,7 +186,7 @@ const styles = StyleSheet.create({
   contentContainer: { paddingBottom: 16 },
 
   appHeader:     { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 10, paddingTop: 35, paddingBottom: 0 },
-  hdrInner:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 20, paddingBottom: 1 },
+  hdrInner:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 30, paddingBottom: 1 },
   hdrBrand:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap:   { position: 'relative' },
   hdrLogoImg:    { width: 50, height: 50, borderRadius: 12 },

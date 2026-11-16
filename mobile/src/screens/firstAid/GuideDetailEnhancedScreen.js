@@ -109,9 +109,6 @@ function ImageModal({ visible, imageSource, caption, onClose }) {
     >
       <View style={modalStyles.overlay}>
         <StatusBar backgroundColor="#000" barStyle="light-content" />
-        <TouchableOpacity style={modalStyles.closeBtn} onPress={onClose} activeOpacity={0.8}>
-          <Ionicons name="close" size={26} color="#fff" />
-        </TouchableOpacity>
         
         <TouchableOpacity activeOpacity={1} style={modalStyles.imgContainer} onPress={onClose}>
           {imageSource && (
@@ -545,7 +542,7 @@ const styles = StyleSheet.create({
   stickyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'android' ? 12 : 6,
+    paddingTop: Platform.OS === 'android' ? 30 : 20,
     paddingBottom: 12,
     paddingHorizontal: 16,
     gap: 10,

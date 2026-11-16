@@ -28,8 +28,8 @@ export default function HistoryScreen() {
         </View>
         {callHistory.length === 0 ? (
           <View style={s.emptyState}>
-            <View style={[s.emptyIconBox, { backgroundColor: '#f5eef8' }]}>
-              <Ionicons name="call-outline" size={32} color="#8e44ad" />
+            <View style={[s.emptyIconBox, { backgroundColor: '#fdecea' }]}>
+              <Ionicons name="call-outline" size={32} color="#e74c3c" />
             </View>
             <Text style={s.emptyTitle}>No Calls Yet</Text>
             <Text style={s.emptyDesc}>Calls made through this app will appear here.</Text>
@@ -37,7 +37,7 @@ export default function HistoryScreen() {
         ) : (
           callHistory.map(e => (
             <View key={e.id} style={s.histCard}>
-              <View style={s.histIcon}><Ionicons name="call" size={16} color="#8e44ad" /></View>
+              <View style={[s.histIcon, { backgroundColor: '#fdecea' }]}><Ionicons name="call" size={16} color="#e74c3c" /></View>
               <View style={s.histBody}>
                 <Text style={s.histName}>{e.label}</Text>
                 <Text style={s.histNum}>{e.number}</Text>
@@ -68,10 +68,10 @@ const s = StyleSheet.create({
   emptyTitle:    { fontSize: 16, fontWeight: '800', color: '#1a1a2e', marginBottom: 5 },
   emptyDesc:     { fontSize: 13, color: '#999', textAlign: 'center' },
   histCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 10, gap: 13, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  histIcon:      { width: 42, height: 42, borderRadius: 12, backgroundColor: '#f5eef8', justifyContent: 'center', alignItems: 'center' },
+  histIcon:      { width: 42, height: 42, borderRadius: 12, backgroundColor: '#fdecea', justifyContent: 'center', alignItems: 'center' },
   histBody:      { flex: 1 },
   histName:      { fontSize: 14, fontWeight: '800', color: '#1a1a2e' },
   histNum:       { fontSize: 13, color: '#555', marginTop: 1 },
   histTime:      { fontSize: 11, color: '#aaa', marginTop: 3 },
-  histCallBtn:   { width: 38, height: 38, borderRadius: 12, backgroundColor: '#8e44ad', justifyContent: 'center', alignItems: 'center' },
+  histCallBtn:   { width: 38, height: 38, borderRadius: 12, backgroundColor: '#e74c3c', justifyContent: 'center', alignItems: 'center' },
 });

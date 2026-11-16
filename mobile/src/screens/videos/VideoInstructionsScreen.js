@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f6f8' },
   list:      { paddingBottom: 8 },
 
-  header:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e74c3c', paddingHorizontal: 14, paddingVertical: 16, paddingTop: 55, paddingBottom: 10, gap: 12 },
+  header:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e74c3c', paddingHorizontal: 14, paddingVertical: 16, paddingTop: 73, paddingBottom: 10, gap: 12 },
   headerIconBox:   { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   headerTitle:     { fontSize: 18, fontWeight: '900', color: '#fff' },
   headerSub:       { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 },

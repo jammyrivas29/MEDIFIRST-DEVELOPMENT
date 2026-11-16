@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SEEN_KEY = 'medifirst_seen_alert_ids';
+const GUEST_SEEN_KEY = 'medifirst_guest_seen_alert_ids';
 
 const initialState = {
   unread: 0,
@@ -34,6 +35,15 @@ export const loadSeenIds = async () => {
   }
 };
 
+export const loadGuestSeenIds = async () => {
+  try {
+    const raw = await AsyncStorage.getItem(GUEST_SEEN_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const loadDismissedIds = async () => {
   try {
     const raw = await AsyncStorage.getItem(DISMISSED_KEY);
@@ -57,12 +67,33 @@ export const markAllSeen = async (items) => {
   }
 };
 
+export const markGuestAllSeen = async (items) => {
+  try {
+    const ids = items.map((n) => n._id);
+    await AsyncStorage.setItem(GUEST_SEEN_KEY, JSON.stringify(ids));
+  } catch {
+    // ignore
+  }
+};
+
 export const markOneSeen = async (id) => {
   try {
     const ids = await loadSeenIds();
     if (!ids.includes(id)) {
       ids.push(id);
       await AsyncStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+    }
+  } catch {
+    // ignore
+  }
+};
+
+export const markGuestOneSeen = async (id) => {
+  try {
+    const ids = await loadGuestSeenIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      await AsyncStorage.setItem(GUEST_SEEN_KEY, JSON.stringify(ids));
     }
   } catch {
     // ignore

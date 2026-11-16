@@ -4,9 +4,15 @@ import {
   StyleSheet, Modal, SafeAreaView, StatusBar, Platform, Alert, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { runPickHistory } from './chatActions';
+import {
+  loadUserHistory,
+  saveUserHistory,
+  getLastActiveConvoId,
+  setLastActiveConvoId,
+} from './chatStorage';
 
 // Animated bottom sheet: static faded overlay + smooth slide-up sheet
 function BottomSheet({ visible, onClose, children }) {
@@ -32,36 +38,33 @@ function BottomSheet({ visible, onClose, children }) {
   );
 }
 
-const HISTORY_KEY = '@medifirst_chat_history_v1';
-const MAX_HISTORY = 30;
-
-async function loadHistory() {
-  try { const raw = await AsyncStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; }
-  catch { return []; }
-}
-async function saveHistory(conversations) {
-  try { await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(conversations.slice(0, MAX_HISTORY))); } catch {}
-}
-
 export default function ChatHistoryScreen() {
   const navigation = useNavigation();
+  const { user, isGuest } = useSelector((state) => state.auth);
   const [conversations, setConversations] = useState([]);
   const [menuTargetId, setMenuTargetId] = useState(null);
   const [renameTargetId, setRenameTargetId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const load = useCallback(async () => { setConversations(await loadHistory()); }, []);
+  const load = useCallback(async () => {
+    const convos = await loadUserHistory(user, isGuest);
+    setConversations(convos);
+  }, [user, isGuest]);
+
   useEffect(() => { load(); }, [load]);
   useFocusEffect(useCallback(() => { load(); return () => {}; }, [load]));
 
-  const persist = (next) => { setConversations(next); saveHistory(next); };
+  const persist = (next) => {
+    setConversations(next);
+    saveUserHistory(user, isGuest, next);
+  };
 
   const pinConversation = (id) => {
     setMenuTargetId(null);
     setConversations((prev) => {
       const next = prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c));
       const sorted = [...next].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updatedAt - a.updatedAt);
-      saveHistory(sorted);
+      saveUserHistory(user, isGuest, sorted);
       return sorted;
     });
   };
@@ -71,7 +74,7 @@ export default function ChatHistoryScreen() {
     if (!name || !renameTargetId) { setRenameTargetId(null); return; }
     setConversations((prev) => {
       const next = prev.map((c) => (c.id === renameTargetId ? { ...c, title: name, titleLocked: true, updatedAt: Date.now() } : c));
-      saveHistory(next);
+      saveUserHistory(user, isGuest, next);
       return next;
     });
     setRenameTargetId(null);
@@ -95,7 +98,13 @@ export default function ChatHistoryScreen() {
           onPress: () => {
             setConversations((prev) => {
               const next = prev.filter((c) => c.id !== id);
-              saveHistory(next);
+              saveUserHistory(user, isGuest, next);
+              (async () => {
+                const activeId = await getLastActiveConvoId(user, isGuest);
+                if (activeId === id) {
+                  await setLastActiveConvoId(user, isGuest, next[0]?.id || null);
+                }
+              })();
               return next;
             });
           },
@@ -135,6 +144,7 @@ export default function ChatHistoryScreen() {
             <TouchableOpacity
               style={s.itemLeft}
               onPress={async () => {
+                await setLastActiveConvoId(user, isGuest, item.id);
                 runPickHistory(item.id);
                 // Pop back past the Menu to return directly to the chat screen
                 if (navigation.canGoBack()) {
@@ -208,7 +218,7 @@ export default function ChatHistoryScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 24 },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
   iconBtn: { padding: 6 },
   iconBtnDark: { padding: 6 },

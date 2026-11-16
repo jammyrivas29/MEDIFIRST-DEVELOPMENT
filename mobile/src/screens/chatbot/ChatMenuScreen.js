@@ -62,7 +62,7 @@ export default function ChatMenuScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e74c3c', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 24,},
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center' },
   iconBtn: { padding: 6 },
   body: { padding: 16, gap: 12 },

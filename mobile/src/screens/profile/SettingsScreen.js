@@ -103,7 +103,7 @@ export default function SettingsScreen() {
 }
 
 const s = StyleSheet.create({
-  root:         { flex: 1, backgroundColor: '#f0f2f5' },
+  root:         { flex: 1, backgroundColor: '#f5f6f8' },
   scroll:       { flex: 1 },
   scrollPad:    { padding: 14, paddingTop: 16 },
   groupLabel:   { fontSize: 10, fontWeight: '800', color: '#bbb', letterSpacing: 1.5, marginBottom: 10, marginTop: 8, paddingHorizontal: 2 },
@@ -113,7 +113,7 @@ const s = StyleSheet.create({
   menuRow:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 15, gap: 14 },
   menuDivider:  { height: 1, backgroundColor: '#f5f5f5', marginHorizontal: 16 },
   menuIconBox:  { width: 44, height: 44, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
-  menuTitle:    { fontSize: 14, fontWeight: '700', color: '#1a1a2e', marginBottom: 2 },
+  menuTitle:    { fontSize: 14, fontWeight: '700', color: '#1a1a2e', marginBottom: 2},
   menuSub:      { fontSize: 11, color: '#999' },
   versionNote:  { fontSize: 11, color: '#ccc', textAlign: 'center', marginTop: 8 },
 });

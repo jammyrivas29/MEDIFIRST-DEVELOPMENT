@@ -16,7 +16,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) { 
-      Alert.alert('Required Fields', 'Please enter both your email address and password.'); 
+      Alert.alert('Required Fields', 'This field is required.'); 
       return; 
     }
     try { 
@@ -52,24 +52,6 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.welcomeSub}>Sign in to access your medical profile</Text>
             </View>
           </View>
-
-          {/* Feature pills row */}
-          <View style={styles.pillsRow}>
-            {[
-              { label: 'Profile', icon: 'medical' },
-              { label: 'Contacts', icon: 'call' },
-              { label: 'AI Helper', icon: 'sparkles' },
-              { label: 'History', icon: 'time' },
-            ].map((p, i, arr) => (
-              <React.Fragment key={p.label}>
-                <View style={styles.pill}>
-                  <Ionicons name={p.icon} size={12} color="#fff" style={{ marginBottom: 2 }} />
-                  <Text style={styles.pillText}>{p.label}</Text>
-                </View>
-                {i < arr.length - 1 && <View style={styles.pillDivider} />}
-              </React.Fragment>
-            ))}
-          </View>
         </View>
 
         {/* ══ FORM CARD ══ */}
@@ -86,11 +68,12 @@ export default function LoginScreen({ navigation }) {
           )}
 
           {/* Email Field */}
+          <Text style={styles.inputLabel}>Email Address</Text>
           <View style={styles.inputRow}>
             <Ionicons name="mail-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email address"
+              placeholder="Enter Email Address"
               placeholderTextColor="#bbb"
               value={email}
               onChangeText={setEmail}
@@ -101,11 +84,12 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           {/* Password Field */}
+          <Text style={styles.inputLabel}>Password</Text>
           <View style={styles.inputRow}>
             <Ionicons name="lock-closed-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="Enter Password"
               placeholderTextColor="#bbb"
               value={password}
               onChangeText={setPassword}
@@ -165,7 +149,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e74c3c',
     paddingTop: 70,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 6,
     elevation: 6,
     shadowColor: '#c0392b',
     shadowOffset: { width: 0, height: 3 },
@@ -190,7 +174,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 24,
-    paddingTop: 28,
+    paddingTop: 18,
     flex: 1,
   },
   cardTitle: { fontSize: 22, fontWeight: '800', color: '#1a1a2e', marginBottom: 4 },
@@ -199,6 +183,7 @@ const styles = StyleSheet.create({
   errorBox:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fdecea', padding: 12, borderRadius: 10, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#e74c3c' },
   errorText: { color: '#c0392b', fontSize: 13, flex: 1 },
 
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#1a1a2e', marginBottom: 6, marginLeft: 2 },
   inputRow:  { flexDirection: 'row', alignItems: 'center', borderRadius: 12, marginBottom: 12, paddingHorizontal: 14, borderWidth: 1.5, borderColor: '#ececec', backgroundColor: '#f8f9fa' },
   inputIcon: { marginRight: 10 },
   input:     { flex: 1, paddingVertical: 14, fontSize: 14, color: '#1a1a2e' },

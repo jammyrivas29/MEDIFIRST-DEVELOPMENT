@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser, registerUser as registerUserAPI } from '../api/authApi';
+import { initNewUserChatHistory } from '../screens/chatbot/chatStorage';
 
 // Login
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
@@ -20,6 +21,9 @@ export const registerUser = createAsyncThunk('auth/register', async (userData, {
     const data = await registerUserAPI(userData);
     await AsyncStorage.setItem('token', data.token);
     await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    if (data.user) {
+      await initNewUserChatHistory(data.user);
+    }
     return data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Registration failed');

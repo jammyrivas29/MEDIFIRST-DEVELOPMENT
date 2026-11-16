@@ -135,8 +135,6 @@ export default function NotificationsScreen() {
           {/* List Metadata Header */}
           <View style={s.listHeader}>
             <View style={s.adminPill}>
-              <Ionicons name="shield-checkmark" size={12} color="#27ae60" />
-              <Text style={s.adminPillTxt}>OFFICIAL ADMIN CHANNEL</Text>
             </View>
             </View>
 
@@ -259,7 +257,7 @@ const s = StyleSheet.create({
   // ══════ HEADER (Matches UserHomeScreen proportions) ══════
   header: {
     backgroundColor: '#e74c3c',
-    paddingTop: Platform.OS === 'ios' ? 52 : (StatusBar.currentHeight || 0) + 12,
+    paddingTop: Platform.OS === 'ios' ? 52 : (StatusBar.currentHeight || 0) + 30,
     paddingHorizontal: 16,
     paddingBottom: 14, // Compact bottom padding
   },

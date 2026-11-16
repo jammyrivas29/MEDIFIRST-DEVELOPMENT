@@ -25,15 +25,10 @@ const FIRST_AID_TIPS = [
   { icon: 'thermometer', color: '#27ae60', title: 'Heat Stroke',          tip: 'Move person to a cooler environment. Remove excess clothing. Apply cool, wet cloths to skin. Call 911 if severe.' },
 ];
 
-function SectionHeader({ label, title, icon, iconColor, iconBg }) {
+function SectionHeader({ label, title, labelColor }) {
   return (
     <View style={styles.sectionHeader}>
-      <View style={styles.sectionLabelRow}>
-        <View style={[styles.sectionIconBox, { backgroundColor: iconBg }]}>
-          <Ionicons name={icon} size={13} color={iconColor} />
-        </View>
-        <Text style={[styles.sectionLabel, { color: iconColor }]}>{label}</Text>
-      </View>
+      <Text style={[styles.sectionLabel, labelColor ? { color: labelColor } : null]}>{label}</Text>
       <Text style={styles.sectionTitle}>{title}</Text>
     </View>
   );
@@ -100,10 +95,7 @@ export default function EmergencyScreen() {
               <Text style={styles.hdrSub}>Critical services & guidance</Text>
             </View>
           </View>
-          <View style={styles.hdrBadge}>
-            <Ionicons name="warning" size={12} color="#e74c3c" />
-            <Text style={styles.hdrBadgeText}>EMERGENCY</Text>
-          </View>
+
         </View>
         <View style={styles.hdrStrip}>
           <View style={styles.hdrLiveDot} />
@@ -111,39 +103,13 @@ export default function EmergencyScreen() {
         </View>
       </SafeAreaView>
 
-      {/* ── Stats row ── */}
-      <View style={styles.statsWrap}>
-        {[
-          { num: '4',    label: 'Hotlines',  icon: 'call',      color: '#e74c3c' },
-          { num: '8',    label: 'Protocols', icon: 'clipboard', color: '#2980b9' },
-          { num: '24/7', label: 'Available', icon: 'time',      color: '#8e44ad' },
-        ].map((s, i, arr) => (
-          <React.Fragment key={s.label}>
-            <View style={styles.statItem}>
-              <View style={[styles.statIconBox, { backgroundColor: s.color + '18' }]}>
-                <Ionicons name={s.icon} size={13} color={s.color} />
-              </View>
-              <Text style={styles.statNum}>{s.num}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-            {i < arr.length - 1 && <View style={styles.statDivider} />}
-          </React.Fragment>
-        ))}
-      </View>
-
-      {/* ── Alert banner ── */}
-      <View style={styles.alertBanner}>
-        <Ionicons name="information-circle" size={16} color="#7d6608" />
-        <Text style={styles.alertBannerText}>In any life-threatening situation, call 911 first. Do not delay professional help.</Text>
-      </View>
-
       {/* ══ QUICK ACTIONS ══ */}
-      <SectionHeader label="QUICK ACTIONS" title="Immediate Response" icon="flash" iconColor="#e74c3c" iconBg="#fdecea" />
+      <SectionHeader label="QUICK ACTIONS" title="Immediate Response" labelColor="#e74c3c" />
 
       <View style={styles.unifiedCard}>
         <View style={styles.cardHeaderStrip}>
-          <Ionicons name="flash" size={14} color="#e74c3c" />
-          <Text style={styles.cardHeaderText}>Tap to act immediately</Text>
+          <Ionicons name="warning" size={14} color="#e74c3c" />
+          <Text style={styles.cardHeaderText}>Tap below in case of emergency</Text>
         </View>
         <TouchableOpacity style={styles.cardRow} onPress={() => callNumber('911', 'Emergency Services')} activeOpacity={0.82}>
           <View style={[styles.rowIcon, { backgroundColor: '#e74c3c' }]}>
@@ -164,7 +130,7 @@ export default function EmergencyScreen() {
           </View>
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>{locating ? 'Getting Location…' : 'Send My Location'}</Text>
-            <Text style={styles.rowSub}>SMS your GPS coordinates to contacts</Text>
+            <Text style={styles.rowSub}>SMS your GPS coordinates to contact</Text>
           </View>
           <View style={[styles.rowBadge, { backgroundColor: '#e9f7ef' }]}>
             <Text style={styles.rowBadgeText}>SMS</Text>
@@ -173,23 +139,18 @@ export default function EmergencyScreen() {
       </View>
 
       {/* ══ EMERGENCY NUMBERS ══ */}
-      <SectionHeader label="EMERGENCY NUMBERS" title="Call for Help" icon="call" iconColor="#e74c3c" iconBg="#fdecea" />
+      <SectionHeader label="EMERGENCY NUMBERS" title="Call for Help" labelColor="#e74c3c" />
 
       <View style={styles.unifiedCard}>
         {hotlines.map((e, idx) => (
           <React.Fragment key={`${e.title}-${e.number}`}>
             <TouchableOpacity style={styles.cardRow} onPress={() => callNumber(e.number, e.title)} activeOpacity={0.82}>
-              <View style={[styles.rowIcon, { backgroundColor: e.bg }]}>
-                <Ionicons name={e.icon} size={21} color={e.color} />
-              </View>
               <View style={styles.rowText}>
                 <Text style={styles.rowTitle}>{e.title}</Text>
                 <Text style={[styles.rowNumber, { color: e.color }]}>{e.number}</Text>
                 <Text style={styles.rowSub}>{e.sub}</Text>
               </View>
-              <View style={[styles.rowIconBtn, { backgroundColor: e.bg }]}>
-                <Ionicons name="call" size={15} color={e.color} />
-              </View>
+              <Ionicons name="chevron-forward" size={20} color="#bbb" />
             </TouchableOpacity>
             {idx < hotlines.length - 1 && <View style={styles.cardDivider} />}
           </React.Fragment>
@@ -197,7 +158,7 @@ export default function EmergencyScreen() {
       </View>
 
       {/* ══ FIRST AID PROTOCOLS ══ */}
-      <SectionHeader label="QUICK REFERENCE" title="First Aid Protocols" icon="medical" iconColor="#8e44ad" iconBg="#f5eef8" />
+      <SectionHeader label="QUICK REFERENCE" title="First Aid Protocols" labelColor="#e74c3c" />
 
       <View style={styles.unifiedCard}>
         {FIRST_AID_TIPS.map((item, idx) => (
@@ -214,6 +175,15 @@ export default function EmergencyScreen() {
             {idx < FIRST_AID_TIPS.length - 1 && <View style={styles.cardDivider} />}
           </React.Fragment>
         ))}
+      </View>
+
+      {/* Quick Tip */}
+      <View style={styles.tipCard}>
+        <View style={styles.tipHeader}>
+          <Ionicons name="bulb" size={16} color="#f39c12" />
+          <Text style={styles.tipTitle}>Quick Tip</Text>
+        </View>
+        <Text style={styles.tipText}>In any emergency, always <Text style={{ fontWeight: '700', color: '#c0392b' }}>call 911 first</Text> before attempting first aid.</Text>
       </View>
 
       {/* ── Disclaimer ── */}
@@ -234,7 +204,7 @@ const styles = StyleSheet.create({
   contentContainer: { paddingBottom: 20 },
 
   appHeader: { backgroundColor: '#e74c3c', elevation: 6, shadowColor: '#c0392b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 8 },
-  hdrInner:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
+  hdrInner:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 30 },
   hdrBrand:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hdrLogoWrap: { position: 'relative' },
   hdrIconBox:  { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
@@ -282,6 +252,11 @@ const styles = StyleSheet.create({
   tipBody:  { flex: 1 },
   tipTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 4 },
   tipText:  { fontSize: 12, color: '#666', lineHeight: 18 },
+
+  tipCard:   { margin: 16, marginTop: 20, backgroundColor: '#fffbf0', borderRadius: 13, padding: 15, borderLeftWidth: 4, borderLeftColor: '#f39c12' },
+  tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 7 },
+  tipTitle:  { fontSize: 14, fontWeight: '700', color: '#856404' },
+  tipText:   { fontSize: 13, color: '#856404', lineHeight: 19 },
 
   disclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 9, marginHorizontal: 16, marginTop: 20, padding: 14, backgroundColor: '#f0f0f0', borderRadius: 12 },
   disclaimerText: { flex: 1, fontSize: 11, color: '#999', lineHeight: 17 },

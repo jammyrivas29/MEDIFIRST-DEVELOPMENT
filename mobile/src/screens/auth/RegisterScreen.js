@@ -12,12 +12,11 @@ import { registerUser, clearError } from '../../store/authSlice';
 const PADLOCK_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/2889/2889676.png';
 
 const RULES = {
-  firstName:       { validate: v => v.trim().length >= 2,                                error: 'First name required.' },
-  lastName:        { validate: v => v.trim().length >= 2,                                error: 'Last name required.' },
+  firstName:       { validate: v => v.trim().length >= 2,       error: 'First name required.' },
+  lastName:        { validate: v => v.trim().length >= 2,       error: 'Last name required.' },
   email:           { validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()), error: 'Enter a valid email.' },
-  phoneNumber:     { validate: v => v === '' || /^09\d{9}$/.test(v),             error: 'Must be 11 digits (09XXXXXXXXX).' },
-  password:        { validate: v => v.length >= 6,                                error: 'At least 6 characters required.' },
-  confirmPassword: { validate: (v, form) => v.length > 0 && v === form.password, error: 'Passwords do not match.' },
+  password:        { validate: v => v.length >= 6,              error: (v) => v.length === 0 ? 'This field is required.' : 'At least 6 characters required.' },
+  confirmPassword: { validate: (v, form) => v.length === 0 || v === form.password, error: 'Password does not match.' },
 };
 
 export default function RegisterScreen({ navigation }) {
@@ -27,16 +26,19 @@ export default function RegisterScreen({ navigation }) {
   const [touched, setTouched]           = useState({});
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '',
-    password: '', confirmPassword: '', phoneNumber: '',
+    password: '', confirmPassword: '',
   });
 
   const set   = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
   const touch = (key)      => setTouched(prev => ({ ...prev, [key]: true }));
   const hasError = (key)   => touched[key] && !RULES[key].validate(form[key], form);
+  const getError = (key)   => {
+    const e = RULES[key].error;
+    return typeof e === 'function' ? e(form[key], form) : e;
+  };
 
   const allValid = () =>
-    ['firstName', 'lastName', 'email', 'password', 'confirmPassword'].every(k => RULES[k].validate(form[k], form)) &&
-    RULES.phoneNumber.validate(form.phoneNumber, form);
+    ['firstName', 'lastName', 'email', 'password', 'confirmPassword'].every(k => RULES[k].validate(form[k], form));
 
   const handleRegister = async () => {
     setTouched(Object.keys(RULES).reduce((a, k) => ({ ...a, [k]: true }), {}));
@@ -50,7 +52,6 @@ export default function RegisterScreen({ navigation }) {
         lastName:    form.lastName.trim(),
         email:       form.email.trim(),
         password:    form.password,
-        phoneNumber: form.phoneNumber,
       })).unwrap();
     } catch (err) {
       Alert.alert('Registration Failed', err || 'Something went wrong.');
@@ -72,31 +73,6 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.userEmail}>Join MediFirst — it's completely free</Text>
             </View>
           </View>
-          <View style={styles.statsRow}>
-            {[
-              { num: '100%', label: 'Free' },
-              { num: '24/7', label: 'Access' },
-              { num: '8+',   label: 'Features' },
-              { 
-                isIcon: true, 
-                icon: (
-                  <Image 
-                    source={{ uri: PADLOCK_ICON_URL }} 
-                    style={styles.statIcon} 
-                  />
-                ), 
-                label: 'Private' 
-              },
-            ].map((s, i, arr) => (
-              <React.Fragment key={s.label}>
-                <View style={styles.statItem}>
-                  {s.isIcon ? s.icon : <Text style={styles.statNum}>{s.num}</Text>}
-                  <Text style={styles.statLabel}>{s.label}</Text>
-                </View>
-                {i < arr.length - 1 && <View style={styles.statDivider} />}
-              </React.Fragment>
-            ))}
-          </View>
         </View>
 
         {/* ══ FORM CARD ══ */}
@@ -111,48 +87,13 @@ export default function RegisterScreen({ navigation }) {
             </View>
           )}
 
-          {/* First + Last Name Container */}
-          <View style={styles.nameRow}>
-            <View style={styles.halfInputContainer}>
-              <View style={[styles.inputRow, hasError('firstName') && styles.inputRowError]}>
-                <Ionicons name="person-outline" size={18} color="#bbb" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="First Name"
-                  placeholderTextColor="#bbb"
-                  value={form.firstName}
-                  onChangeText={v => set('firstName', v)}
-                  onBlur={() => touch('firstName')}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                />
-              </View>
-              {hasError('firstName') && <Text style={styles.fieldError}>{RULES.firstName.error}</Text>}
-            </View>
-
-            <View style={styles.halfInputContainer}>
-              <View style={[styles.inputRow, hasError('lastName') && styles.inputRowError]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Last Name"
-                  placeholderTextColor="#bbb"
-                  value={form.lastName}
-                  onChangeText={v => set('lastName', v)}
-                  onBlur={() => touch('lastName')}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                />
-              </View>
-              {hasError('lastName') && <Text style={styles.fieldError}>{RULES.lastName.error}</Text>}
-            </View>
-          </View>
-
           {/* Email */}
+          <Text style={styles.inputLabel}>Email Address</Text>
           <View style={[styles.inputRow, hasError('email') && styles.inputRowError]}>
             <Ionicons name="mail-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email address"
+              placeholder="Enter Email Address"
               placeholderTextColor="#bbb"
               value={form.email}
               onChangeText={v => set('email', v)}
@@ -164,31 +105,47 @@ export default function RegisterScreen({ navigation }) {
           </View>
           {hasError('email') && <Text style={styles.fieldError}>{RULES.email.error}</Text>}
 
-          {/* Phone */}
-          <View style={[styles.inputRow, hasError('phoneNumber') && styles.inputRowError]}>
-            <Ionicons name="call-outline" size={18} color="#bbb" style={styles.inputIcon} />
+          {/* First Name */}
+          <Text style={styles.inputLabel}>First Name</Text>
+          <View style={[styles.inputRow, hasError('firstName') && styles.inputRowError]}>
+            <Ionicons name="person-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Phone Number (optional)"
+              placeholder="Enter First Name"
               placeholderTextColor="#bbb"
-              value={form.phoneNumber}
-              onChangeText={v => {
-                const cleaned = v.replace(/[^0-9]/g, '');
-                if (cleaned.length <= 11) set('phoneNumber', cleaned);
-              }}
-              onBlur={() => touch('phoneNumber')}
-              keyboardType="phone-pad"
-              maxLength={11}
+              value={form.firstName}
+              onChangeText={v => set('firstName', v)}
+              onBlur={() => touch('firstName')}
+              autoCapitalize="words"
+              autoCorrect={false}
             />
           </View>
-          {hasError('phoneNumber') && <Text style={styles.fieldError}>{RULES.phoneNumber.error}</Text>}
+          {hasError('firstName') && <Text style={styles.fieldError}>{RULES.firstName.error}</Text>}
+
+          {/* Last Name */}
+          <Text style={styles.inputLabel}>Last Name</Text>
+          <View style={[styles.inputRow, hasError('lastName') && styles.inputRowError]}>
+            <Ionicons name="person-outline" size={18} color="#bbb" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Last Name"
+              placeholderTextColor="#bbb"
+              value={form.lastName}
+              onChangeText={v => set('lastName', v)}
+              onBlur={() => touch('lastName')}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          </View>
+          {hasError('lastName') && <Text style={styles.fieldError}>{RULES.lastName.error}</Text>}
 
           {/* Password */}
+          <Text style={styles.inputLabel}>Password</Text>
           <View style={[styles.inputRow, hasError('password') && styles.inputRowError]}>
             <Ionicons name="lock-closed-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="Enter Password"
               placeholderTextColor="#bbb"
               value={form.password}
               onChangeText={v => set('password', v)}
@@ -200,14 +157,15 @@ export default function RegisterScreen({ navigation }) {
               <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color="#bbb" />
             </TouchableOpacity>
           </View>
-          {hasError('password') && <Text style={styles.fieldError}>{RULES.password.error}</Text>}
+          {hasError('password') && <Text style={styles.fieldError}>{getError('password')}</Text>}
 
           {/* Confirm Password */}
+          <Text style={styles.inputLabel}>Confirm Password</Text>
           <View style={[styles.inputRow, hasError('confirmPassword') && styles.inputRowError]}>
             <Ionicons name="lock-closed-outline" size={18} color="#bbb" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Confirm Password"
+              placeholder="Enter Confirm Password"
               placeholderTextColor="#bbb"
               value={form.confirmPassword}
               onChangeText={v => set('confirmPassword', v)}
@@ -216,7 +174,7 @@ export default function RegisterScreen({ navigation }) {
               autoCorrect={false}
             />
           </View>
-          {hasError('confirmPassword') && <Text style={styles.fieldError}>{RULES.confirmPassword.error}</Text>}
+          {hasError('confirmPassword') && form.confirmPassword.length > 0 && <Text style={styles.fieldError}>{getError('confirmPassword')}</Text>}
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -253,7 +211,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e74c3c', 
     paddingTop: 70, 
     paddingHorizontal: 16, 
-    paddingBottom: 18, 
+    paddingBottom: 6, 
     elevation: 6, 
     shadowColor: '#c0392b', 
     shadowOffset: { width: 0, height: 3 }, 
@@ -278,7 +236,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28, 
     borderTopRightRadius: 28, 
     padding: 24, 
-    paddingTop: 28, 
+    paddingTop: 20, 
     flex: 1 
   },
   cardTitle: { fontSize: 22, fontWeight: '800', color: '#1a1a2e', marginBottom: 4 },
@@ -290,6 +248,7 @@ const styles = StyleSheet.create({
   nameRow:            { flexDirection: 'row', gap: 10, marginBottom: 12 },
   halfInputContainer: { flex: 1 },
 
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#1a1a2e', marginBottom: 6, marginLeft: 2 },
   inputRow: { 
     flexDirection: 'row', 
     alignItems: 'center', 
